@@ -1,4 +1,6 @@
 package domain;
 
-public record Segment(String start, String finish) {
+import java.util.List;
+
+public record Segment(List<KeyValue> keyValues) {
 }

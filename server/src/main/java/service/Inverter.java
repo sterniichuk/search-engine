@@ -2,6 +2,8 @@ package service;
 
 import domain.Segment;
 
+import java.util.List;
+
 public interface Inverter {
-    void reduce(Segment segment);
+    void reduce(List<Segment> segments);
 }

@@ -16,7 +16,7 @@ class ParserTest {
     void map() {
         Parser parser = new Parser();
         String start = new File("..\\datasets\\aclImdb\\test\\neg\\0_2.txt").getPath();
-        File file = new File("..\\datasets\\aclImdb\\test\\neg\\1_3.txt");
+        File file = new File("..\\datasets\\aclImdb\\test\\neg\\2_3.txt");
         String finish = file.getPath();
         List<KeyValue> map = parser.map(List.of(new Split(start, finish)), Map.of(file.getParent(), 0));
         assertTrue(map.size() > 50 && map.size() < 350);

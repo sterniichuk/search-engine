@@ -22,7 +22,6 @@ public class Parser {
     private static final int SMALL_WORD_LENGTH = 3;
 
 
-
     /**
      * Parses files defined by Split into a list of (term, docId) pairs.
      * <p>
@@ -32,7 +31,8 @@ public class Parser {
      *     <li>Performs text processing.</li>
      *     <li>Maps term to docId in the result.</li>
      * </ol>
-     * @param splits list of splits. Each split contains a folder, start and finish index of files to be indexed.
+     *
+     * @param splits  list of splits. Each split contains a folder, start and finish index of files to be indexed.
      * @param folders map of folders and their ids.
      * @return list of (term, docId) pairs.
      */
@@ -50,6 +50,7 @@ public class Parser {
                 result.addAll(parseWords(f, index, folderId));
             }
         }
+        result.sort(Comparator.naturalOrder());
         return result;
     }
 

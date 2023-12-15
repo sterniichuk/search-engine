@@ -2,5 +2,5 @@ package domain;
 
 import java.util.List;
 
-public record Segment(List<KeyValue> keyValues) {
+public record Segment(List<TermDocId> termDocIds) {
 }

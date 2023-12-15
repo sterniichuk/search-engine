@@ -1,7 +1,7 @@
 package service;
 
 import config.Config;
-import domain.TermDocId;
+import domain.TermPostingPair;
 import domain.Split;
 
 import java.io.File;
@@ -18,7 +18,7 @@ public class MasterNode {
         List<Split> splits = paths.stream().map(File::new).map((File x) -> toSplit(x, variant)).toList();
         Map<String, Integer> map = toMap(paths);
         Parser parser = new Parser(new TextProcessor());
-        List<TermDocId> pairs = parser.map(splits, map);
+        List<TermPostingPair> pairs = parser.map(splits, map);
         return null;
     }
 

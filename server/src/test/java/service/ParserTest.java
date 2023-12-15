@@ -14,7 +14,7 @@ class ParserTest {
 
     @Test
     void map() {
-        Parser parser = new Parser();
+        Parser parser = new Parser(new TextProcessor());
         String start = new File("..\\datasets\\aclImdb\\test\\neg\\0_2.txt").getPath();
         File file = new File("..\\datasets\\aclImdb\\test\\neg\\2_3.txt");
         String finish = file.getPath();

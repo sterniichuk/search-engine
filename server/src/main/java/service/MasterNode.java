@@ -17,7 +17,7 @@ public class MasterNode {
     public InvertedIndex buildIndexFromSource(List<String> paths, int variant) {
         List<Split> splits = paths.stream().map(File::new).map((File x) -> toSplit(x, variant)).toList();
         Map<String, Integer> map = toMap(paths);
-        Parser parser = new Parser();
+        Parser parser = new Parser(new TextProcessor());
         List<KeyValue> pairs = parser.map(splits, map);
         return null;
     }

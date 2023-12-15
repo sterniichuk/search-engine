@@ -3,6 +3,7 @@ package service;
 import domain.DocId;
 import domain.KeyValue;
 import domain.Split;
+import lombok.RequiredArgsConstructor;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,16 +11,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+@RequiredArgsConstructor
 public class Parser {
-    /**
-     * List of common suffixes
-     */
-    private static final String[] suffixes = {
-            "s", "es", "ed", "ing", "ly", "er", "or", "ion", "able", "ible",
-            "ment", "ness", "ful", "less", "al", "ive", "ize", "ify", "ise", "ist"
-    };
+
     private static final int AVERAGE_WORD_LENGTH = 6;
-    private static final int SMALL_WORD_LENGTH = 3;
+
+    private final TextProcessor processor;
 
 
     /**
@@ -59,7 +56,7 @@ public class Parser {
         var list = new ArrayList<KeyValue>(Math.max(1, (int) (f.length() / AVERAGE_WORD_LENGTH)));
         try (var br = new BufferedReader(new FileReader(f))) {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
-                var words = textProcessing(line);
+                var words = processor.processText(line);
                 for (int i = 0; i < words.length; i++) {
                     String word = words[i];
                     var keyValue = new KeyValue(word, new DocId(folderId, fileId, (short) i));
@@ -70,23 +67,6 @@ public class Parser {
             throw new RuntimeException(e);
         }
         return list;
-    }
-
-    private String[] textProcessing(String line) {
-        var words = line.toLowerCase()
-                .replaceAll("(?<=[a-z])\\.|'s", "")//Tokenization, Normalization
-                .split("\\W+");
-        return Arrays.stream(words).filter(s -> !s.isEmpty()).map(this::stemWord).toArray(String[]::new);//Stemming
-    }
-
-
-    private String stemWord(String word) {
-        for (String suffix : suffixes) {
-            if (word.length() > SMALL_WORD_LENGTH && word.length() > suffix.length() && word.endsWith(suffix)) {
-                return word.substring(0, word.length() - suffix.length());
-            }
-        }
-        return word;
     }
 
     private int fileNameToIndex(String fileName) {

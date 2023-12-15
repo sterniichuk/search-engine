@@ -28,7 +28,7 @@ class InverterTest {
         //then
         assertTrue(reduce.size() < map.size());
         long count = reduce.stream()
-                .flatMap(x -> x.termDocIds().stream())
+                .flatMap(x -> x.postings().stream())
                 .flatMap(x -> x.positions().stream())
                 .count();
         assertEquals(map.size(), count);

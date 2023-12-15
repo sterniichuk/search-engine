@@ -1,7 +1,11 @@
 package service;
 
-import domain.DocumentIDs;
+import domain.Posting;
+
+import java.util.List;
 
 public interface InvertedIndex {
-    DocumentIDs get(String string);
+    List<Posting> get(String term);
+
+    void add(String term, List<Posting> postings);
 }

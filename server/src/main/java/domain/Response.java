@@ -1,4 +1,4 @@
 package domain;
 
-public record Response(DocumentIDs ids) {
+public record Response() {
 }

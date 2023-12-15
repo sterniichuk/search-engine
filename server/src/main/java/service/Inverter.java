@@ -40,7 +40,7 @@ public class Inverter {
                     String[] parts = entry.getKey().split("-");
                     byte folder = Byte.parseByte(parts[0]);
                     int docId = Integer.parseInt(parts[1]);
-                    return new Posting(folder, docId, entry.getValue());
+                    return new Posting(folder, docId, entry.getValue().stream().sorted().toList());
                 })
                 .toList();
     }

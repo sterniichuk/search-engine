@@ -47,7 +47,6 @@ public class Parser {
                 result.addAll(parseWords(f, index, folderId));
             }
         }
-        result.sort(Comparator.naturalOrder());
         return result;
     }
 

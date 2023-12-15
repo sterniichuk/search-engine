@@ -1,7 +1,8 @@
 package service;
 
 import config.Config;
-import domain.TermPostingPair;
+import domain.Segment;
+import domain.TermDocIdPair;
 import domain.Split;
 
 import java.io.File;
@@ -18,7 +19,9 @@ public class MasterNode {
         List<Split> splits = paths.stream().map(File::new).map((File x) -> toSplit(x, variant)).toList();
         Map<String, Integer> map = toMap(paths);
         Parser parser = new Parser(new TextProcessor());
-        List<TermPostingPair> pairs = parser.map(splits, map);
+        List<TermDocIdPair> pairs = parser.map(splits, map);
+        Inverter inverter = new Inverter();
+        inverter.reduce(List.of(new Segment(pairs)));
         return null;
     }
 

@@ -1,7 +1,7 @@
 package service;
 
-import domain.Posting;
-import domain.TermPostingPair;
+import domain.DocId;
+import domain.TermDocIdPair;
 import domain.Split;
 import lombok.RequiredArgsConstructor;
 
@@ -33,8 +33,8 @@ public class Parser {
      * @param folders map of folders and their ids.
      * @return list of (term, docId) pairs.
      */
-    public List<TermPostingPair> map(List<Split> splits, Map<String, Integer> folders) {
-        ArrayList<TermPostingPair> result = new ArrayList<>();
+    public List<TermDocIdPair> map(List<Split> splits, Map<String, Integer> folders) {
+        ArrayList<TermDocIdPair> result = new ArrayList<>();
         for (Split split : splits) {
             var s = getSplitMapping(split);
             File folder = new File(s.folder());
@@ -52,14 +52,14 @@ public class Parser {
     }
 
 
-    private List<TermPostingPair> parseWords(File f, int fileId, byte folderId) {
-        var list = new ArrayList<TermPostingPair>(Math.max(1, (int) (f.length() / AVERAGE_WORD_LENGTH)));
+    private List<TermDocIdPair> parseWords(File f, int fileId, byte folderId) {
+        var list = new ArrayList<TermDocIdPair>(Math.max(1, (int) (f.length() / AVERAGE_WORD_LENGTH)));
         try (var br = new BufferedReader(new FileReader(f))) {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 var words = processor.processText(line);
                 for (int i = 0; i < words.length; i++) {
                     String word = words[i];
-                    var keyValue = new TermPostingPair(word, new Posting(folderId, fileId, (short) i));
+                    var keyValue = new TermDocIdPair(word, new DocId(folderId, fileId, (short) i));
                     list.add(keyValue);
                 }
             }

@@ -35,8 +35,7 @@ public class Parser {
      */
     public List<TermDocIdPair> map(List<Split> splits, Map<String, Integer> folders) {
         ArrayList<TermDocIdPair> result = new ArrayList<>();
-        for (Split split : splits) {
-            var s = getSplitMapping(split);
+        for (Split s : splits) {
             File folder = new File(s.folder());
             byte folderId = folders.get(s.folder()).byteValue();
             for (var f : Objects.requireNonNull(folder.listFiles())) {
@@ -71,15 +70,5 @@ public class Parser {
     private int fileNameToIndex(String fileName) {
         String idAsString = fileName.substring(0, fileName.indexOf('_'));
         return Integer.parseInt(idAsString);
-    }
-
-    record SplitMapping(String folder, int start, int finish) {
-    }
-
-    private SplitMapping getSplitMapping(Split split) {
-        String folderPath = split.start().substring(0, split.start().lastIndexOf(File.separator));
-        int startIndex = fileNameToIndex(split.start().replace(folderPath + File.separator, ""));
-        int finishIndex = fileNameToIndex(split.finish().replace(folderPath + File.separator, ""));
-        return new SplitMapping(folderPath, startIndex, finishIndex);
     }
 }

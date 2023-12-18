@@ -19,7 +19,6 @@ public class TextProcessor {
         return Arrays.stream(words).filter(s -> !s.isEmpty()).map(this::stemWord).toArray(String[]::new);//Stemming
     }
 
-
     private String stemWord(String word) {
         for (String suffix : suffixes) {
             if (word.length() > SMALL_WORD_LENGTH && word.length() > suffix.length() && word.endsWith(suffix)) {

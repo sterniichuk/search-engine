@@ -2,6 +2,7 @@ package service;
 
 import domain.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ public class Inverter {
 
     /**
      * Groups all documents by word
+     *
      * @param segments part of the (term, docID) pairs
      * @return entries (term, [posting1, posting2, posting3...]), where term is a word that occurs in specific files with docID.
      * Posting contains docID.
@@ -34,7 +36,6 @@ public class Inverter {
                         docId -> docId.folder() + "-" + docId.docId(),
                         Collectors.mapping(DocId::position, Collectors.toList())
                 ));
-
         return groupedByIds.entrySet().stream()
                 .map(entry -> {
                     String[] parts = entry.getKey().split("-");
@@ -42,6 +43,6 @@ public class Inverter {
                     int docId = Integer.parseInt(parts[1]);
                     return new Posting(folder, docId, entry.getValue().stream().sorted().toList());
                 })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }

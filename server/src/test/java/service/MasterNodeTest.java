@@ -1,5 +1,7 @@
 package service;
 
+import domain.Entry;
+import domain.Posting;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,7 +28,7 @@ class MasterNodeTest {
 
     @ParameterizedTest
     @ValueSource(ints = {2, 3, 2, 5, 8, 10})
-    void buildParallelIndex(int threadNumber) {
+    void testPutOfParallelIndex(int threadNumber) {
         //given
         MasterNode master = new MasterNode();
         long start = System.currentTimeMillis();
@@ -37,20 +39,50 @@ class MasterNodeTest {
         var parallelIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, threadNumber);
         final long parallelTime = System.currentTimeMillis() - start;
         //then
-        System.out.println(STR."""
-                Single thread time: \{singleTime}
-                \{threadNumber} threads time: \{parallelTime}
-                Speed: Single \{singleTime < parallelTime? "faster than" : "slower than" } Parallel
-                """);
+        System.out.println(STR. """
+                Single thread time: \{ singleTime }
+                \{ threadNumber } threads time: \{ parallelTime }
+                Speed: Single \{ singleTime < parallelTime ? "faster than" : "slower than" } Parallel
+                """ );
         Set<String> set = new HashSet<>(parallelIndex.size());
         parallelIndex.forEach((x, y) -> {
             assertNotNull(simpleInvertedIndex.get(x));
             if (set.contains(x)) {
                 System.err.println(parallelIndex);
-                throw new AssertionError(STR."'\{x}' present two times");
+                throw new AssertionError(STR. "'\{ x }' present two times" );
             }
             set.add(x);
         });
         assertEquals(simpleInvertedIndex.size(), parallelIndex.size());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {24, 8, 16})
+    void testMapOfParallelIndex(int variant) throws InterruptedException {
+        //given
+        MasterNode master = new MasterNode();
+        int fromIndex = Math.max(0, DEFAULT_PATHS.size() - 2);
+        List<String> dataset = DEFAULT_PATHS.subList(fromIndex, DEFAULT_PATHS.size());
+        var expectedIndex = master.buildIndexFromSource(dataset, 1, 1).toList();
+        InvertedIndex newIndex = master.buildIndexFromSource(dataset, variant, 1);
+        List<Entry> newEntries = newIndex.toList();
+        var parallelIndex = master.buildIndexFromSource(dataset, 1, 8);
+        //when
+        Thread parallelInsertionIntoIndex = new Thread(() -> {
+            newEntries.stream().parallel().forEach(e -> parallelIndex.put(e.term(), e.postings()));
+        });
+        parallelInsertionIntoIndex.start();
+        //then
+        expectedIndex.stream().parallel()
+                .forEach(e -> {
+                    List<Posting> postings = parallelIndex.get(e.term());
+                    assertTrue(postings.size() >= e.postings().size());//check getting old terms during update
+                });
+        parallelInsertionIntoIndex.join();
+        newEntries.stream().parallel()
+                .forEach(e -> {
+                    List<Posting> postings = parallelIndex.get(e.term());
+                    assertTrue(postings.size() >= e.postings().size());//check getting new terms after update
+                });
     }
 }

@@ -1,5 +1,6 @@
 package service;
 
+import domain.Entry;
 import domain.Posting;
 import lombok.RequiredArgsConstructor;
 
@@ -22,10 +23,9 @@ public class SingleThreadInvertedIndex implements InvertedIndex {
         return (res != null) ? res : List.of();
     }
 
-
     @Override
     public void put(String term, List<Posting> postings) {
-        map.put(term, postings);//assume that term inserted once and only once because everything is done in single thread
+        map.put(term, postings);//assume that term inserted once and only once because building is done in a single thread
     }
 
     @Override
@@ -36,5 +36,10 @@ public class SingleThreadInvertedIndex implements InvertedIndex {
     @Override
     public void forEach(BiConsumer<String, List<Posting>> action) {
         map.forEach(action);
+    }
+
+    @Override
+    public List<Entry> toList() {
+        return map.entrySet().stream().map(e -> new Entry(e.getKey(), e.getValue())).toList();
     }
 }

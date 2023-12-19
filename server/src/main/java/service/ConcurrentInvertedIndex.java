@@ -1,7 +1,9 @@
 package service;
 
+import domain.Entry;
 import domain.Posting;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -12,6 +14,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
     private final AtomicInteger size = new AtomicInteger(0);
     private volatile int capacity;
     private final float loadFactor;
+    private final Object resizeMonitor = new Object();
     private volatile AtomicReferenceArray<Node> bucket;
     private static final int MINIMUM_CAPACITY = 16;
     private static final float MINIMUM_LOAD_FACTOR = 0.3F;
@@ -41,9 +44,50 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
         return (h ^ (h >>> 16)) & HASH_BITS;
     }
 
+    /**
+     * Retrieves a list of occurrences of the stored term based on the provided key.
+     * Ensure that the input key has undergone the same text processing as the stored term.
+     *
+     * @param key The stored term used for retrieval.
+     * @return A list of occurrences of this term in files. An empty list is returned if the term is not found.
+     * @see TextProcessor
+     */
     @Override
     public List<Posting> get(String key) {
+        int hash = spread(key.hashCode());
+        for (var table = bucket; ; table = bucket) {
+            int index = hash % bucket.length();
+            Node existingNode;
+            if ((existingNode = table.get(index)) != null) {
+                if (waitUntilResize(existingNode, table)) {
+                    continue;
+                }
+                while (existingNode != null) {
+                    if (existingNode.hash == hash && existingNode.key.equals(key)) {
+                        return existingNode.value;
+                    }
+                    existingNode = existingNode.next;
+                }
+            }
+            break;
+        }
         return List.of();
+    }
+
+    private boolean waitUntilResize(Node existingNode, AtomicReferenceArray<Node> table) {
+        if (existingNode == emptyNode) {
+            synchronized (resizeMonitor) {
+                while (table == this.bucket) {
+                    try {
+                        resizeMonitor.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -51,16 +95,17 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
         return size.get();
     }
 
-    private final Object resizeMonitor = new Object();
-
     @Override
     public void put(String key, List<Posting> value) {
+        if (key == null || key.isBlank() || value == null || value.isEmpty()) {
+            return;
+        }
         int hash = spread(key.hashCode());
-        boolean stop = false;
         int futureSize = size.get() + 1;
         if (futureSize > capacity * loadFactor) {
             tryResize();
         }
+        boolean stop = false;
         for (var table = bucket; !stop; table = bucket) {
             int index = hash % table.length();
             Node existingNode;
@@ -71,15 +116,8 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                 }
                 continue;
             }
-            if (existingNode == emptyNode) {
-                synchronized (resizeMonitor) {
-                    while (table == bucket) {
-                        System.out.println(STR. "Wait: \{ Thread.currentThread().getName() }" );
-                        waitResize();
-                    }
-                    System.out.println(STR. "Wait: \{ Thread.currentThread().getName() } released" );
-                    continue;
-                }
+            if (waitUntilResize(existingNode, table)) {
+                continue;
             }
             synchronized (existingNode) {
                 if (existingNode == table.get(index) && table == bucket) {
@@ -102,17 +140,9 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
         }
     }
 
-    private void waitResize() {
-        try {
-            resizeMonitor.wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private final Node emptyNode = new Node(-1, null, null);
 
-    private synchronized void tryResize() {
+    private synchronized void tryResize() {//single thread resizing
         int futureSize = this.size.get() + 1;
         if (futureSize < capacity * loadFactor) {
             return;
@@ -124,9 +154,6 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                 continue;
             }
             Node node = bucket.get(i);
-            if (node == emptyNode) {
-                continue;
-            }
             synchronized (node) {
                 for (; node != null; node = node.next) {
                     int newIndex = node.hash % newCapacity;
@@ -181,16 +208,44 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
         }
     }
 
+    /**
+     * Iterates through each node in the table.
+     * <p>
+     * Note: This method does not guarantee that the action will be performed on each bucket.
+     * The table can decide to resize at any moment during concurrent updating.
+     *
+     * @param action the action to be performed with each node
+     */
     @Override
     public void forEach(BiConsumer<String, List<Posting>> action) {
         var bucket = this.bucket;
         for (int i = 0; i < bucket.length(); i++) {
             Node node = bucket.get(i);
+            if (node == emptyNode) {
+                continue;
+            }
             while (node != null) {
                 action.accept(node.key, node.value);
                 node = node.next;
             }
         }
+    }
+
+    @Override
+    public List<Entry> toList() {
+        var bucket = this.bucket;
+        List<Entry> entries = new ArrayList<>(bucket.length());
+        for (int i = 0; i < bucket.length(); i++) {
+            Node node = bucket.get(i);
+            if (node == emptyNode) {
+                continue;
+            }
+            while (node != null) {
+                entries.add(new Entry(node.key, node.value));
+                node = node.next;
+            }
+        }
+        return entries;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package service;
 
+import domain.Entry;
 import domain.Posting;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface InvertedIndex {
     int size();
 
     void forEach(BiConsumer<String, List<Posting>> action);
+
+    List<Entry> toList();
 }

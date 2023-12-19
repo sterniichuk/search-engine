@@ -46,7 +46,7 @@ public class MasterNode {
                         if (index[0] == null) {
                             synchronized (index) {
                                 if (index[0] == null) {
-                                    index[0] = new ConcurrentInvertedIndex(reduce.size());
+                                    index[0] = new ConcurrentInvertedIndex(Math.max(reduce.size(), 32));
                                 }
                             }
                         }

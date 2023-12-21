@@ -120,7 +120,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                 continue;
             }
             synchronized (existingNode) {
-                if (existingNode == table.get(index) && table == bucket) {
+                if (existingNode == table.get(index) && table == this.bucket) {
                     for (var node = existingNode; ; ) {
                         if (node.key.equals(key)) {
                             updater.mergeSortedLists(node.value, value);
@@ -211,7 +211,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
     /**
      * Iterates through each node in the table.
      * <p>
-     * Note: This method does not guarantee that the action will be performed on each bucket.
+     * Note: This method does not guarantee that the action will be performed on each node
      * The table can decide to resize at any moment during concurrent updating.
      *
      * @param action the action to be performed with each node

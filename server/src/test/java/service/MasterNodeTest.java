@@ -63,7 +63,8 @@ class MasterNodeTest {
         MasterNode master = new MasterNode();
         int fromIndex = Math.max(0, DEFAULT_PATHS.size() - 2);
         List<String> dataset = DEFAULT_PATHS.subList(fromIndex, DEFAULT_PATHS.size());
-        var expectedIndex = master.buildIndexFromSource(dataset, 1, 1).toList();
+        var expectedIndex = master.buildIndexFromSource(dataset, 1, 1);
+        var expectedList = expectedIndex.toList();
         InvertedIndex newIndex = master.buildIndexFromSource(dataset, variant, 1);
         List<Entry> newEntries = newIndex.toList();
         var parallelIndex = master.buildIndexFromSource(dataset, 1, 8);
@@ -73,7 +74,7 @@ class MasterNodeTest {
         });
         parallelInsertionIntoIndex.start();
         //then
-        expectedIndex.stream().parallel()
+        expectedList.stream().parallel()
                 .forEach(e -> {
                     List<Posting> postings = parallelIndex.get(e.term());
                     assertTrue(postings.size() >= e.postings().size());//check getting old terms during update
@@ -82,7 +83,7 @@ class MasterNodeTest {
         newEntries.stream().parallel()
                 .forEach(e -> {
                     List<Posting> postings = parallelIndex.get(e.term());
-                    assertTrue(postings.size() >= e.postings().size());//check getting new terms after update
+                    assertEquals(postings.size(), e.postings().size() + expectedIndex.get(e.term()).size());//check getting new terms after update
                 });
     }
 }

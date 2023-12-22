@@ -2,7 +2,6 @@ package service;
 
 import domain.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,6 +42,7 @@ public class Inverter {
                     int docId = Integer.parseInt(parts[1]);
                     return new Posting(folder, docId, entry.getValue().stream().sorted().toList());
                 })
-                .collect(Collectors.toCollection(ArrayList::new));
+                .sorted()
+                .toList();
     }
 }

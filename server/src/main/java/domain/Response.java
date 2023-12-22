@@ -1,4 +1,4 @@
 package domain;
 
-public record Response() {
+public record Response(String path, int id) {
 }

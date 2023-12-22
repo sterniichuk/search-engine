@@ -1,14 +1,12 @@
 package service;
 
-import domain.Entry;
-import domain.Segment;
-import domain.Split;
-import domain.TermDocIdPair;
+import domain.*;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public class MasterNode {
     public static final int READ_WHOLE_DATASET = -1;
@@ -18,7 +16,7 @@ public class MasterNode {
      * @param paths   List of paths to files. aclImdb/*
      * @param variant Variant in the group of the student. -1 - when reading whole dataset
      */
-    public InvertedIndex buildIndexFromSource(List<String> paths, int variant, int threadNumber) {
+    public MasterResponse buildIndexFromSource(List<String> paths, int variant, int threadNumber) {
         Map<String, Integer> map = toMap(paths);
         InvertedIndex index;
         if (threadNumber <= 1) {
@@ -26,7 +24,14 @@ public class MasterNode {
         } else {
             index = parallelIndexBuilding(paths, variant, map, threadNumber);
         }
-        return index;
+        Map<Integer, String> numberToFolder = invertMap(map);
+        return new MasterResponse(index, numberToFolder);
+    }
+
+    private Map<Integer, String> invertMap(Map<String, Integer> map) {
+        return map.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
 
     private InvertedIndex parallelIndexBuilding(List<String> paths, int variant,

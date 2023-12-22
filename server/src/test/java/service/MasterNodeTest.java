@@ -18,7 +18,7 @@ class MasterNodeTest {
     @Test
     void buildIndexFromSource() {
         MasterNode master = new MasterNode();
-        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, 1);
+        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, 1).index();
         String surnamePresentInTheFirstFile = "Costner";
         surnamePresentInTheFirstFile = (new TextProcessor().processText(surnamePresentInTheFirstFile))[0]; //adjust word to token
         var postings = simpleInvertedIndex.get(surnamePresentInTheFirstFile);
@@ -32,11 +32,11 @@ class MasterNodeTest {
         //given
         MasterNode master = new MasterNode();
         long start = System.currentTimeMillis();
-        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, 1);
+        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, 1).index();
         final long singleTime = System.currentTimeMillis() - start;
         //when
         start = System.currentTimeMillis();
-        var parallelIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, threadNumber);
+        var parallelIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, threadNumber).index();
         final long parallelTime = System.currentTimeMillis() - start;
         //then
         System.out.println(STR. """
@@ -63,11 +63,11 @@ class MasterNodeTest {
         MasterNode master = new MasterNode();
         int fromIndex = Math.max(0, DEFAULT_PATHS.size() - 2);
         List<String> dataset = DEFAULT_PATHS.subList(fromIndex, DEFAULT_PATHS.size());
-        var expectedIndex = master.buildIndexFromSource(dataset, 1, 1);
+        var expectedIndex = master.buildIndexFromSource(dataset, 1, 1).index();
         var expectedList = expectedIndex.toList();
-        InvertedIndex newIndex = master.buildIndexFromSource(dataset, variant, 1);
+        InvertedIndex newIndex = master.buildIndexFromSource(dataset, variant, 1).index();
         List<Entry> newEntries = newIndex.toList();
-        var parallelIndex = master.buildIndexFromSource(dataset, 1, 8);
+        var parallelIndex = master.buildIndexFromSource(dataset, 1, 8).index();
         //when
         Thread parallelInsertionIntoIndex = new Thread(() -> {
             newEntries.stream().parallel().forEach(e -> parallelIndex.put(e.term(), e.postings()));

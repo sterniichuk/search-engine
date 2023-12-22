@@ -3,23 +3,21 @@ package service;
 import domain.Posting;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PostingUpdaterTest {
 
     @Test
     void mergeSortedLists() {
-        List<Posting> recipientSource = List.of(
+        List<Posting> recipient = List.of(
                 new Posting((byte) 1, 1, null),
                 new Posting((byte) 1, 4, null),
                 new Posting((byte) 2, 2, null),
                 new Posting((byte) 2, 5, null)
         );
-        List<Posting> recipient = new ArrayList<>(recipientSource);
 
         List<Posting> donor = List.of(
                 new Posting((byte) 1, 2, null),
@@ -30,8 +28,8 @@ class PostingUpdaterTest {
                 new Posting((byte) 3, 6, null)
         );
         var updater = new PostingUpdater();
-        updater.mergeSortedLists(recipient, donor);
-        assertEquals(recipient.size(), recipientSource.size() + donor.size());
-        assertEquals(recipient, Stream.concat(recipientSource.stream(), donor.stream()).sorted().toList());
+        List<Posting> actual = updater.mergeSortedLists(recipient, donor);
+        assertEquals( recipient.size() + donor.size(), actual.size());
+        assertEquals(Stream.concat(recipient.stream(), donor.stream()).sorted().toList(), actual);
     }
 }

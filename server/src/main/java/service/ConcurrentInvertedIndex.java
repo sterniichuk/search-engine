@@ -64,7 +64,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                 }
                 while (existingNode != null) {
                     if (existingNode.hash == hash && existingNode.key.equals(key)) {
-                        return existingNode.value;
+                        return copy(existingNode.value);
                     }
                     existingNode = existingNode.next;
                 }
@@ -72,6 +72,15 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
             break;
         }
         return List.of();
+    }
+
+    private List<Posting> copy(List<Posting> value) {
+        var copy = new ArrayList<Posting>(value.size());
+        for (var i : value) {
+            //noinspection UseBulkOperation
+            copy.add(i);
+        }
+        return copy;
     }
 
     private boolean waitUntilResize(Node existingNode, AtomicReferenceArray<Node> table) {
@@ -123,7 +132,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                 if (existingNode == table.get(index) && table == this.bucket) {
                     for (var node = existingNode; ; ) {
                         if (node.key.equals(key)) {
-                            updater.mergeSortedLists(node.value, value);
+                            node.value = updater.mergeSortedLists(node.value, value);
                             stop = true;
                             break;
                         }

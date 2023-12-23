@@ -18,26 +18,99 @@ public class SearchService {
     public List<Response> search(String string) {
         String[] tokens = processor.processText(string);
         Map<String, List<Posting>> postings = getMap(tokens);
-        if (postings.isEmpty()) {
+        if (postings.isEmpty() || postings.entrySet().stream().anyMatch(e -> e.getValue().isEmpty())) {
             return List.of();
         }
-        var l = IntStream.range(0, tokens.length - 1)
-                .mapToObj(i -> positionalIntersect(postings.get(tokens[i]), postings.get(tokens[i + 1]), k))
-                .toList();
-        int prevSize = -1;
-        while (prevSize <= l.size() && l.size() > 1) {
-            prevSize = l.size();
-            List<List<Posting>> finalL = l;
-            l = IntStream.range(0, l.size() - 1)
-                    .mapToObj(i -> positionalIntersect(finalL.get(i), finalL.get(i + 1), k))
-                    .toList();
-
-        }
+        var l = minimizeSearchResult(tokens, postings);
+        l = minimizeSearchResult(l);
         return l.stream()
                 .flatMap(Collection::stream)
                 .distinct()
-                .map(p -> new Response(folderMapper.get((int)p.folder()), p.docId()))
+                .map(p -> new Response(folderMapper.get((int) p.folder()), p.docId()))
                 .toList();
+    }
+
+    /**
+     * Performs the initial minimization of the search results.
+     * <p>
+     * This method identifies the shortest list of search results based on the provided tokens
+     * and intersects it with other lists using an appropriate offset 'k'.
+     *
+     * @param tokens   Processed words obtained from the search request.
+     * @param postings A map containing token-to-postings associations, where the key is the token,
+     *                 and the value is a list of postings associated with that token.
+     * @return A minimized collection of posting lists after intersecting with the shortest list.
+     */
+    private List<List<Posting>> minimizeSearchResult(String[] tokens, Map<String, List<Posting>> postings) {
+        int shortest = findShortestList(tokens, postings);
+        var shortestList = postings.get(tokens[shortest]);
+        return IntStream.range(0, tokens.length)
+                .filter(i -> i != shortest)
+                .mapToObj(i -> positionalIntersect(postings.get(tokens[i]), shortestList, k + Math.abs(i - shortest)))
+                .toList();
+    }
+
+    /**
+     * Further minimizes the search result after the initial minimization.
+     * <p>
+     * This method continues to refine the collection of posting lists by iteratively intersecting them
+     * until no further reduction can be achieved or until a convergence condition is met.
+     *
+     * @param l A collection of posting lists obtained after the initial minimization.
+     *          Each list contains postings associated with specific search tokens.
+     * @return Final minimized list of postings after iterative intersections.
+     */
+    private List<List<Posting>> minimizeSearchResult(List<List<Posting>> l) {
+        int prevSize = Integer.MAX_VALUE;
+        int prevShortestSize = Integer.MAX_VALUE;
+        while (prevSize > l.size() && l.size() > 1) {
+            int shortest = findShortestList(l);
+            if (l.get(shortest).size() > prevShortestSize) {
+                break;
+            }
+            prevShortestSize = l.get(shortest).size();
+            var newIntersection = intersectWithShortest(l, shortest);
+            if (newIntersection.size() < l.size()) {
+                prevSize = l.size();
+                l = newIntersection;
+                continue;
+            }
+            break;
+        }
+        return l;
+    }
+
+    private List<List<Posting>> intersectWithShortest(List<List<Posting>> l, int shortest) {
+        return IntStream.range(0, l.size())
+                .filter(i -> i != shortest)
+                .mapToObj(i -> positionalIntersect(l.get(i), l.get(shortest), k + Math.abs(i - shortest)))
+                .toList();
+    }
+
+    private int findShortestList(List<List<Posting>> l) {
+        int min = Integer.MAX_VALUE;
+        int index = -1;
+        for (int i = 0; i < l.size(); i++) {
+            int size = l.get(i).size();
+            if (size < min && size != 0) {
+                min = size;
+                index = i;
+            }
+        }
+        return index;
+    }
+
+    private int findShortestList(String[] tokens, Map<String, List<Posting>> postings) {
+        int min = Integer.MAX_VALUE;
+        int index = -1;
+        for (int i = 0; i < tokens.length; i++) {
+            int size = postings.get(tokens[i]).size();
+            if (size < min && size != 0) {
+                min = size;
+                index = i;
+            }
+        }
+        return index;
     }
 
     private Map<String, List<Posting>> getMap(String[] tokens) {
@@ -46,13 +119,11 @@ public class SearchService {
                 .collect(Collectors.toMap(s -> s, index::get));
     }
 
-
     /**
-     * @link https://www.youtube.com/watch?v=QVVvx_Csd2I&list=PLaZQkZp6WhWwoDuD6pQCmgVyDbUWl_ZUi&t=406s
-     * @link https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf Page 42(or 79 in pdf)
-     * Introduction to Information Retrieval. Cambridge University Press Cambridge, England
+     * @link <a href="https://www.youtube.com/watch?v=QVVvx_Csd2I&list=PLaZQkZp6WhWwoDuD6pQCmgVyDbUWl_ZUi&t=406s">7 6 Phrase Queries and Positional Indexes 19 45</a>
+     * @link <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">Introduction to Information Retrieval. Cambridge University Press Cambridge, England. Page 42(or 79 in pdf)</a>
      */
-    private List<Posting> positionalIntersect(List<Posting> posting1, List<Posting> posting2, int index) {
+    private List<Posting> positionalIntersect(List<Posting> posting1, List<Posting> posting2, int k) {
         List<Posting> notEmpty = checkEmpty(posting1, posting2);
         if (notEmpty != null) {
             return notEmpty;

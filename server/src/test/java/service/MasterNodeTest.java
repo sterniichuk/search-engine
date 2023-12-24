@@ -6,9 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.*;
 
 import static config.Config.DEFAULT_PATHS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,11 +33,12 @@ class MasterNodeTest {
         //given
         MasterNode master = new MasterNode();
         long start = System.currentTimeMillis();
-        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, 1).index();
+        int variant = 24;
+        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), variant, 1).index();
         final long singleTime = System.currentTimeMillis() - start;
         //when
         start = System.currentTimeMillis();
-        var parallelIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, threadNumber).index();
+        var parallelIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), variant, threadNumber).index();
         final long parallelTime = System.currentTimeMillis() - start;
         //then
         System.out.println(STR. """
@@ -45,6 +47,7 @@ class MasterNodeTest {
                 Speed: Single \{ singleTime < parallelTime ? "faster than" : "slower than" } Parallel
                 """ );
         Set<String> set = new HashSet<>(parallelIndex.size());
+        //noinspection unused
         parallelIndex.forEach((x, y) -> {
             assertNotNull(simpleInvertedIndex.get(x));
             if (set.contains(x)) {
@@ -54,6 +57,33 @@ class MasterNodeTest {
             set.add(x);
         });
         assertEquals(simpleInvertedIndex.size(), parallelIndex.size());
+    }
+
+//    @Test
+    @SuppressWarnings("unused")
+    void wholeDataset() {
+        //given
+        MasterNode master = new MasterNode();
+        int variant = -1;
+        //when
+        var parallelIndex = master.buildIndexFromSource(DEFAULT_PATHS, variant, 32).index();
+        TextProcessor p = new TextProcessor();
+        var dictionary = DEFAULT_PATHS.stream()
+                .map(i -> new File(i).listFiles())
+                .filter(Objects::nonNull)
+                .flatMap(Arrays::stream)
+                .parallel()
+                .flatMap(file -> {
+                    try {
+                        return Files.lines(file.toPath());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).map(p::processText)
+                .flatMap(Arrays::stream)
+                .distinct().count();
+        //then
+        assertEquals(dictionary, parallelIndex.size());
     }
 
     @ParameterizedTest

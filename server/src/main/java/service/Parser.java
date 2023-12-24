@@ -36,17 +36,27 @@ public class Parser {
     public List<TermDocIdPair> map(List<Split> splits, Map<String, Integer> folders) {
         ArrayList<TermDocIdPair> result = new ArrayList<>();
         for (Split s : splits) {
-            File folder = new File(s.folder());
-            byte folderId = folders.get(s.folder()).byteValue();
-            for (var f : Objects.requireNonNull(folder.listFiles())) {
-                int index = fileNameToIndex(f.getName());
-                if (index < s.start() || index >= s.finish()) {
-                    continue;
-                }
-                result.addAll(parseWords(f, index, folderId));
-            }
+            map(s, folders, result);
         }
         return result;
+    }
+
+    public List<TermDocIdPair> map(Split split, Map<String, Integer> folders) {
+        ArrayList<TermDocIdPair> result = new ArrayList<>();
+        map(split, folders, result);
+        return result;
+    }
+
+    private void map(Split s, Map<String, Integer> folders, List<TermDocIdPair> result) {
+        File folder = new File(s.folder());
+        byte folderId = folders.get(s.folder()).byteValue();
+        for (var f : Objects.requireNonNull(folder.listFiles())) {
+            int index = fileNameToIndex(f.getName());
+            if (index < s.start() || index >= s.finish()) {
+                continue;
+            }
+            result.addAll(parseWords(f, index, folderId));
+        }
     }
 
 

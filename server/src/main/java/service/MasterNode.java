@@ -28,49 +28,12 @@ public class MasterNode {
         return new MasterResponse(index, numberToFolder);
     }
 
-    private Map<Integer, String> invertMap(Map<String, Integer> map) {
-        return map.entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-    }
-
-    private InvertedIndex parallelIndexBuilding(List<String> paths, int variant,
-                                                Map<String, Integer> map, int threadNumber) {
-        var splits = paths.stream().map(File::new)
-                .flatMap((File x) -> splitter.toSplit(x, variant, threadNumber).stream()).toList();
-        final InvertedIndex[] index = new InvertedIndex[]{null};
-        Parser parser = new Parser(new TextProcessor());
-        Inverter inverter = new Inverter();
-        List<Future<?>> futures = new ArrayList<>();
-        try (var executor = Executors.newFixedThreadPool(threadNumber)) {
-            for (Split e1 : splits) {
-                Future<?> f = executor.submit(() -> {
-                    try {
-                        var pairs = parser.map(List.of(e1), map);
-                        var reduce = inverter.reduce(List.of(new Segment(pairs)));
-                        if (index[0] == null) {
-                            synchronized (index) {
-                                if (index[0] == null) {
-                                    index[0] = new ConcurrentInvertedIndex(Math.max(reduce.size(), 32));
-                                }
-                            }
-                        }
-                        reduce.forEach(e -> index[0].put(e.term(), e.postings()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-                futures.add(f);
-            }
+    private Map<String, Integer> toMap(List<String> paths) {
+        Map<String, Integer> map = new HashMap<>(paths.size());
+        for (int i = 0; i < paths.size(); i++) {
+            map.put(paths.get(i), i);
         }
-        futures.forEach(x -> {
-            try {
-                x.get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return index[0];
+        return Collections.unmodifiableMap(map);
     }
 
     private InvertedIndex singleThreadIndexBuilding(List<String> paths,
@@ -86,11 +49,59 @@ public class MasterNode {
         return index;
     }
 
-    private Map<String, Integer> toMap(List<String> paths) {
-        Map<String, Integer> map = new HashMap<>(paths.size());
-        for (int i = 0; i < paths.size(); i++) {
-            map.put(paths.get(i), i);
+    private InvertedIndex parallelIndexBuilding(List<String> paths, int variant,
+                                                Map<String, Integer> map, int threadNumber) {
+        var splits = getSplits(paths, variant, threadNumber);
+        final InvertedIndex[] index = new InvertedIndex[]{null};
+        Parser parser = new Parser(new TextProcessor());
+        Inverter inverter = new Inverter();
+        List<? extends Future<?>> futures;
+        try (var executor = Executors.newFixedThreadPool(threadNumber)) {
+            futures = splits.stream()
+                    .map(portionOfWork -> executor.submit(() -> {
+                        try {
+                            var pairs = parser.map(portionOfWork, map);
+                            var reduce = inverter.reduce(List.of(new Segment(pairs)));
+                            lazyInit(index, reduce);
+                            reduce.forEach(e -> index[0].put(e.term(), e.postings()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    })).toList();
         }
-        return Collections.unmodifiableMap(map);
+        join(futures);
+        return index[0];
+    }
+
+    private List<List<Split>> getSplits(List<String> paths, int variant, int threadNumber) {
+        var splits = paths.stream().map(File::new)
+                .flatMap((File x) -> splitter.toSplit(x, variant, threadNumber).stream()).toList();
+        return splitter.packSplits(splits, threadNumber);
+    }
+
+    private static void lazyInit(InvertedIndex[] index, List<Entry> reduce) {
+        if (index[0] == null) {
+            synchronized (index) {
+                if (index[0] == null) {
+                    index[0] = new ConcurrentInvertedIndex(Math.max(reduce.size(), 32));
+                }
+            }
+        }
+    }
+
+    private static void join(List<? extends Future<?>> futures) {
+        futures.forEach(x -> {
+            try {
+                x.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private Map<Integer, String> invertMap(Map<String, Integer> map) {
+        return map.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
 }

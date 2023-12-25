@@ -12,4 +12,7 @@ public interface Config {
             "..\\datasets\\aclImdb\\train\\pos",
             "..\\datasets\\aclImdb\\train\\unsup"
     );
+
+    int serverPort = 8088;
+    String host = "localhost";
 }

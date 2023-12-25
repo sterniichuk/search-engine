@@ -15,6 +15,10 @@ public class SearchService {
     private final int k;//two terms appear within k words of each other
     private final TextProcessor processor = new TextProcessor();
 
+    public SearchService(InvertedIndex index, Map<Integer, String> folderMapper) {
+        this(index, folderMapper, 1);
+    }
+
     public List<Response> search(String string) {
         String[] tokens = processor.processText(string);
         Map<String, List<Posting>> postings = getMap(tokens);

@@ -8,7 +8,13 @@
         <artifactId>search-engine</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
+    <dependencies>
+        <dependency>
+            <groupId>ua.kpi.iasa.sd</groupId>
+            <artifactId>api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
     <artifactId>client</artifactId>
 
     <properties>

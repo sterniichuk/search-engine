@@ -6,9 +6,7 @@ import protocol.Request;
 import protocol.RequestBuilder;
 import service.SearchService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -21,16 +19,17 @@ public class SearchController {
         return controller;
     }
 
-    public void search(BufferedReader reader, PrintWriter writer) {
+    public void search(DataInputStream in, DataOutputStream out) {
         try {
-            String query = reader.readLine();
+            out.writeInt(Request.OK);
+            String query = in.readUTF();
             List<Response> response = service.search(query);
-            writer.println(RequestBuilder.SIZE.putValue(response.size()));
+            out.writeUTF(RequestBuilder.SIZE.putValue(response.size()));
             for (var r : response) {
-                writer.write(r.id());
-                writer.write(r.path());
+                out.writeInt(r.id());
+                out.writeUTF(r.path());
             }
-            int read = reader.read();
+            int read = in.readInt();
             if (read != Request.OK) {
                 System.err.println(STR. "Not OK for \{ query }" );
             }
@@ -41,9 +40,7 @@ public class SearchController {
 
     public static synchronized void setInstance(Supplier<SearchController> supplier) {
         if (controller == null) {
-            System.out.println("Building");
             controller = supplier.get();
-            System.out.println("finished");
         }
     }
 }

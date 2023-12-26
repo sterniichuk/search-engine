@@ -3,23 +3,21 @@ package controller;
 import config.Config;
 import protocol.Request;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 public class Killer {
-    public int askServerToFinish() {
+    public void askServerToFinish() {
         try (Socket socket = new Socket(Config.host, Config.serverPort);
-             PrintWriter out = new PrintWriter(socket.getOutputStream());
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            out.println(Request.KILL);
-            var responseCode = in.read();
+             var out = new DataOutputStream(socket.getOutputStream());
+             var in = new DataInputStream(socket.getInputStream())) {
+            out.writeUTF(Request.KILL.toString());
+            var responseCode = in.readInt();
             if (responseCode != Request.OK) {
-                System.out.println("Not OK for kill");
-                return responseCode;
+                System.out.println("Not OK for kill: " + responseCode);
+                return;
             }
-            return responseCode;
+            System.out.println("Killed");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

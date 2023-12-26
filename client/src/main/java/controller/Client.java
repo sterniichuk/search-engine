@@ -6,38 +6,41 @@ import domain.Response;
 import protocol.Request;
 import protocol.RequestBuilder;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Client {
     public void doQueries(List<Query> queries) {
-        try (Socket socket = new Socket(Config.host, Config.serverPort);
-             PrintWriter out = new PrintWriter(socket.getOutputStream());
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            for (var query : queries) {
-                out.println(Request.SEARCH);
-                var responseCode = in.read();
+        for (var query : queries) {
+            try (Socket socket = new Socket(Config.host, Config.serverPort);
+                 var out = new DataOutputStream(socket.getOutputStream());
+                 var in = new DataInputStream(socket.getInputStream())) {
+                out.writeUTF(Request.SEARCH.toString());
+                var responseCode = in.readInt();
                 if (responseCode != Request.OK) {
                     throw new RuntimeException("Not OK for searching");
                 }
-                out.println(query.text());
-                int size = RequestBuilder.SIZE.getInt(in.readLine());
+                out.writeUTF(query.text());
+                int size = RequestBuilder.SIZE.getInt(in.readUTF());
                 List<Response> responses = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) {
-                    int id = in.read();
-                    String folder = in.readLine();
+                    int id = in.readInt();
+                    String folder = in.readUTF();
                     responses.add(new Response(folder, id));
                 }
                 if (!query.expected().equals(responses)) {
+                    System.err.println(STR."""
+                            expected:\{query.expected()}
+                            actual:\{responses}
+                            """);
                     throw new RuntimeException("Response doesn't match expected list");
                 }
+                out.writeInt(Request.OK);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }

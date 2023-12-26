@@ -1,8 +1,10 @@
 package controller;
 
+import config.Config;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -17,6 +19,11 @@ public class Server implements AutoCloseable {
         try (var clientHandlerExecutor = Executors.newFixedThreadPool(8)) {
             while (isWorking) {
                 Socket accept = serverSocket.accept();
+                if (!isWorking) {
+                    accept.close();
+                    System.out.println("Last waiting client socket died properly");
+                    return;
+                }
                 clientHandlerExecutor.submit(() -> {
                     try (ClientHandler handler = new ClientHandler(accept, this::kill)) {
                         handler.run();
@@ -37,6 +44,19 @@ public class Server implements AutoCloseable {
 
     private void kill() {
         isWorking = false;
+        boolean alive = true;
+        while (alive) {
+            //noinspection EmptyTryBlock
+            try (@SuppressWarnings("unused") var socket = new Socket(Config.host, Config.serverPort)) {
+                // Establishing a socket connection to unblock any threads waiting for new clients on the .accept() method.
+            } catch (ConnectException e) {
+                alive = false;
+                System.out.println("Killed");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     @Override

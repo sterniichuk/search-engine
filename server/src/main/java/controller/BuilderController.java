@@ -5,51 +5,41 @@ import protocol.Request;
 import service.MasterNode;
 import service.SearchService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 public class BuilderController {
-    public void handleBuilding(BufferedReader reader, PrintWriter writer, OutputStream outS) {
+    public void handleBuilding(DataInputStream in, DataOutputStream out) {
+        System.out.println("Building request");
         try {
-            outS.write(Request.OK);
-            outS.flush();
-            System.out.println("Send ok");
-            int threads = RequestBuilder.THREADS.getInt(reader.readLine());
-            System.out.println("get threads");
-            int variant = RequestBuilder.VARIANT.getInt(reader.readLine());
-            int numberOfFolders = RequestBuilder.FOLDERS.getInt(reader.readLine());
+            out.writeInt(Request.OK);
+            int threads = RequestBuilder.THREADS.getInt(in.readUTF());
+            int variant = RequestBuilder.VARIANT.getInt(in.readUTF());
+            int numberOfFolders = RequestBuilder.FOLDERS.getInt(in.readUTF());
             List<String> folders = new ArrayList<>(numberOfFolders);
             for (int i = 0; i < numberOfFolders; i++) {
-                var folder = RequestBuilder.FOLDER.getString(reader.readLine());
+                var folder = RequestBuilder.FOLDER.getString(in.readUTF());
                 folders.add(folder);
             }
-            System.out.println("get folders");
             boolean valid = checkParameters(threads, variant, folders);
             int responseCode = valid ? Request.OK : Request.BAD_REQUEST;
-            outS.write(responseCode);
-            if (RequestBuilder.START.equalString(reader.readLine())) {
+            out.writeInt(responseCode);
+            if (RequestBuilder.START.equalString(in.readUTF())) {
                 Supplier<SearchController> supplier = () -> {
                     MasterNode node = new MasterNode();
-                    System.out.println("before alo");
                     var masterResponse = node.buildIndexFromSource(folders, variant, threads);
-                    System.out.println("alo");
                     var searcher = new SearchService(masterResponse.index(), masterResponse.numberToFolder());
                     return new SearchController(searcher);
                 };
                 System.out.println(STR. "Build index with parameters: threadNumber:\{ threads }; variant:\{ variant }; folders:\{ folders }" );
                 SearchController.setInstance(supplier);
                 System.out.println("Index constructed");
-                outS.write(Request.CREATED);
-                outS.flush();
+                out.writeInt(Request.CREATED);
                 return;
             }
-            outS.write(Request.BAD_REQUEST);
-            outS.flush();
+            out.writeInt(Request.BAD_REQUEST);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -12,21 +12,20 @@ public class ClientHandler implements AutoCloseable {
     private final Runnable kill;
 
     public void run() {
-        try (var in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             var out = new PrintWriter(clientSocket.getOutputStream(), true);
-             OutputStream outS = clientSocket.getOutputStream()) {
-            System.out.println("Accepted socket");
-            Request request = Request.valueOf(in.readLine());
+        try (var in = new DataInputStream(clientSocket.getInputStream());
+             var out = new DataOutputStream(clientSocket.getOutputStream())) {
+            Request request = Request.valueOf(in.readUTF());
+            System.out.println(request);
             switch (request) {
-                case BUILD -> (new BuilderController()).handleBuilding(in, out, outS);
+                case BUILD -> (new BuilderController()).handleBuilding(in, out);
                 case SEARCH -> SearchController.getInstance().search(in, out);
                 case KILL -> {
-                    out.println(Request.OK);
+                    out.writeInt(Request.OK);
                     kill.run();
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 

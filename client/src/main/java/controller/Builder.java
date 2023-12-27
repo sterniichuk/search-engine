@@ -8,7 +8,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.List;
 
-public class MainClient {
+public class Builder {
 
     public int buildIndex(int threadNumber, int variant, List<String> folders) {
 

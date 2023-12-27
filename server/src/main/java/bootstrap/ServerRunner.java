@@ -5,7 +5,7 @@ import controller.Server;
 
 import java.net.ServerSocket;
 
-public class Runner {
+public class ServerRunner {
     public static void main(String[] args) {
         System.out.println("Java version: " + System.getProperty("java.version"));
         int port = Config.serverPort;

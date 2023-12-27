@@ -7,7 +7,6 @@ import java.net.ServerSocket;
 
 public class ServerRunner {
     public static void main(String[] args) {
-        System.out.println("Java version: " + System.getProperty("java.version"));
         int port = Config.serverPort;
         try (var server = new Server(new ServerSocket(port))) {
             System.out.println("Server started on port " + port);

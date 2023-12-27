@@ -13,13 +13,24 @@ import static service.MasterNode.READ_WHOLE_DATASET;
 public class FileSplitter {
 
     public Split toSplit(File x, int variant) {
-        var numberOfFiles = Objects.requireNonNull(x.listFiles()).length;
+        var numberOfFiles = checkFolder(x);
         if (variant == READ_WHOLE_DATASET) {
             return new Split(0, numberOfFiles, x.getPath());
         }
         int start = (numberOfFiles / Config.VARIANT_DIVIDER) * (variant - 1);
         int finish = (numberOfFiles / Config.VARIANT_DIVIDER) * (variant);
         return new Split(start, finish, x.getPath());
+    }
+
+    private int checkFolder(File file) {
+        if (!file.isDirectory()) {
+            throw new IllegalArgumentException("Not a directory: " + file.getAbsolutePath());
+        }
+        String[] list = file.list();
+        if (list == null) {
+            throw new IllegalArgumentException("Problems with folder: " + file.getAbsolutePath());
+        }
+        return list.length;
     }
 
     public List<Split> toSplit(File x, int variant, int threadNumber) {

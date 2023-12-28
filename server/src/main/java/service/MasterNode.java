@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class MasterNode {
     private final FileSplitter splitter = new FileSplitter();
+    private final StatisticService statistic = new StatisticService();
 
     /**
      * @param paths   List of paths to files. aclImdb/*
@@ -18,11 +19,14 @@ public class MasterNode {
     public MasterResponse buildIndexFromSource(List<String> paths, int variant, int threadNumber) {
         Map<String, Integer> map = toMap(paths);
         InvertedIndex index;
+        var start = System.nanoTime();
         if (threadNumber <= 1) {
             index = singleThreadIndexBuilding(paths, variant, map);
         } else {
             index = parallelIndexBuilding(paths, variant, map, threadNumber);
         }
+        var time = System.nanoTime() - start;
+        statistic.storeStatistic(new Statistic(time, variant, threadNumber));
         Map<Integer, String> numberToFolder = invertMap(map);
         return new MasterResponse(index, numberToFolder);
     }

@@ -1,6 +1,8 @@
 package bootstrap;
 
+import domain.Statistic;
 import service.ProcessFactory;
+import service.StatisticService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +43,9 @@ public class Bootstrap {
         System.out.println("Java version: " + System.getProperty("java.version"));
         updateArguments(args, arguments);
         var builder = new ProcessFactory();
+        deleteOldStatistic();
         threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder));
+        presentStats();
     }
 
     private static void applicationRuntimeLifeCycle(Integer threadNumber, ProcessFactory builder) {
@@ -78,6 +82,17 @@ public class Bootstrap {
         } finally {
             stopServer(serverStarted, builder);
         }
+    }
+
+    private static void presentStats() {
+        var statisticService = new StatisticService();
+        List<Statistic> statistics = statisticService.loadStatistic();
+        System.out.println(statistics);
+    }
+
+    private static void deleteOldStatistic() {
+        StatisticService service = new StatisticService();
+        service.clearFolder();
     }
 
     private static List<String> getClientArguments() {

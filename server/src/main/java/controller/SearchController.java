@@ -20,18 +20,22 @@ public class SearchController {
     }
 
     public void search(DataInputStream in, DataOutputStream out) {
+        boolean hasNext = true;
         try {
-            out.writeInt(Request.OK);
-            String query = in.readUTF();
-            List<Response> response = service.search(query);
-            out.writeUTF(RequestBuilder.SIZE.putValue(response.size()));
-            for (var r : response) {
-                out.writeInt(r.id());
-                out.writeUTF(r.path());
-            }
-            int read = in.readInt();
-            if (read != Request.OK) {
-                System.err.println(STR. "Not OK for \{ query }" );
+            while (hasNext) {
+                out.writeInt(Request.OK);
+                String query = in.readUTF();
+                List<Response> response = service.search(query);
+                out.writeUTF(RequestBuilder.SIZE.putValue(response.size()));
+                for (var r : response) {
+                    out.writeInt(r.id());
+                    out.writeUTF(r.path());
+                }
+                int read = in.readInt();
+                if (read != Request.OK) {
+                    System.err.println(STR. "Not OK for \{ query }" );
+                }
+                hasNext = in.readBoolean();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

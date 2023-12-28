@@ -53,6 +53,7 @@ public class Bootstrap {
             serverStarted = true;
             builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber)).waitFor();//send request to build index
             int numberOfClients = getIntValue(clientNumber, arguments);
+            System.out.println("Start clients");
             List<Process> list = IntStream.range(0, numberOfClients)
                     .mapToObj(i -> {
                         try {
@@ -65,6 +66,7 @@ public class Bootstrap {
             for (Process process : list) {
                 process.waitFor();//wait for all processes
             }
+            System.out.println("Finish clients");
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -73,7 +75,7 @@ public class Bootstrap {
     }
 
     private static List<String> getClientArguments() {
-        String variantValue = validInt(variant);
+        String variantValue = validInt();
         String folder = arguments.get(source);
         return List.of(variant, variantValue, source, folder);
     }
@@ -90,12 +92,12 @@ public class Bootstrap {
     }
 
     private static List<String> getBuilderArguments(Integer threadNumber) {
-        String variantValue = validInt(variant);
+        String variantValue = validInt();
         return List.of(variant, variantValue, threads, threadNumber + "");
     }
 
-    private static String validInt(String s) {
-        int number = getIntValue(s, arguments);
+    private static String validInt() {
+        int number = getIntValue(config.Config.variant, arguments);
         return number + "";
     }
 }

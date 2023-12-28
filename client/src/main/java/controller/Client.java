@@ -25,32 +25,34 @@ public class Client {
         var factory = new QueryFactory(rand);
         List<Query> notFound = new ArrayList<>();
         int found = 0;
-        for (int i = 0; i < numberOfQueries; i++) {
-            Query query = factory.fromFile(files[rand.nextInt(files.length)]);
-            try (Socket socket = new Socket(Config.host, Config.serverPort);
-                 var out = new DataOutputStream(socket.getOutputStream());
-                 var in = new DataInputStream(socket.getInputStream())) {
+        try (Socket socket = new Socket(Config.host, Config.serverPort);
+             var out = new DataOutputStream(socket.getOutputStream());
+             var in = new DataInputStream(socket.getInputStream())) {
+            out.writeUTF(Request.SEARCH.toString());
+            for (int i = 0; i < numberOfQueries; i++) {
+                Query query = factory.fromFile(files[rand.nextInt(files.length)]);
                 List<Response> responses = sendRequest(out, in, query);
                 if (!responses.contains(query.expected())) {
                     notFound.add(query);
                 } else {
                     found++;
                 }
-            } catch (BindException e) {
-                if (showBindException) {
-                    e.printStackTrace();
-                }
-                return ClientStatus.BIND_EXCEPTION;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                out.writeBoolean(!(i == numberOfQueries - 1));
             }
+
+        } catch (BindException e) {
+            if (showBindException) {
+                e.printStackTrace();
+            }
+            return ClientStatus.BIND_EXCEPTION;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         showStats(notFound, found);
         return ClientStatus.SUCCESS;
     }
 
     private static List<Response> sendRequest(DataOutputStream out, DataInputStream in, Query query) throws IOException {
-        out.writeUTF(Request.SEARCH.toString());
         var responseCode = in.readInt();
         if (responseCode != Request.OK) {
             throw new RuntimeException("Not OK for searching");

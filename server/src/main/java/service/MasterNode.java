@@ -9,7 +9,6 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class MasterNode {
-    public static final int READ_WHOLE_DATASET = -1;
     private final FileSplitter splitter = new FileSplitter();
 
     /**

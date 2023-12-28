@@ -21,6 +21,10 @@ public interface Config {
     String source = "--source";
     String variant = "--variant";
     String threads = "--threads";
+    String queries = "--queries";
+
+    int READ_WHOLE_DATASET = -1;
+
 
     static int getIntValue(String parameter, Map<String, String> args) {
         String value = args.get(parameter);

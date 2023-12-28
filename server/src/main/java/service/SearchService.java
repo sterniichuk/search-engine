@@ -92,9 +92,9 @@ public class SearchService {
     }
 
     private int findShortestList(List<List<Posting>> l) {
-        int min = Integer.MAX_VALUE;
-        int index = -1;
-        for (int i = 0; i < l.size(); i++) {
+        int min = l.getFirst().size();
+        int index = 0;
+        for (int i = 1; i < l.size(); i++) {
             int size = l.get(i).size();
             if (size < min && size != 0) {
                 min = size;

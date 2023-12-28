@@ -15,7 +15,6 @@ public class ClientHandler implements AutoCloseable {
         try (var in = new DataInputStream(clientSocket.getInputStream());
              var out = new DataOutputStream(clientSocket.getOutputStream())) {
             Request request = Request.valueOf(in.readUTF());
-            System.out.println(request);
             switch (request) {
                 case BUILD -> (new BuilderController()).handleBuilding(in, out);
                 case SEARCH -> SearchController.getInstance().search(in, out);

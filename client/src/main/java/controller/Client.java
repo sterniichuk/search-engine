@@ -5,42 +5,81 @@ import domain.Query;
 import domain.Response;
 import protocol.Request;
 import protocol.RequestBuilder;
+import service.QueryFactory;
 
 import java.io.*;
+import java.net.BindException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Client {
-    public void doQueries(List<Query> queries) {
-        for (var query : queries) {
+
+    public enum ClientStatus {
+        SUCCESS, BIND_EXCEPTION
+    }
+
+    public ClientStatus doQueries(int numberOfQueries, File[] files, boolean showBindException) {
+        var rand = new Random();
+        var factory = new QueryFactory(rand);
+        List<Query> notFound = new ArrayList<>();
+        int found = 0;
+        for (int i = 0; i < numberOfQueries; i++) {
+            Query query = factory.fromFile(files[rand.nextInt(files.length)]);
             try (Socket socket = new Socket(Config.host, Config.serverPort);
                  var out = new DataOutputStream(socket.getOutputStream());
                  var in = new DataInputStream(socket.getInputStream())) {
-                out.writeUTF(Request.SEARCH.toString());
-                var responseCode = in.readInt();
-                if (responseCode != Request.OK) {
-                    throw new RuntimeException("Not OK for searching");
+                List<Response> responses = sendRequest(out, in, query);
+                if (!responses.contains(query.expected())) {
+                    notFound.add(query);
+                } else {
+                    found++;
                 }
-                out.writeUTF(query.text());
-                int size = RequestBuilder.SIZE.getInt(in.readUTF());
-                List<Response> responses = new ArrayList<>(size);
-                for (int i = 0; i < size; i++) {
-                    int id = in.readInt();
-                    String folder = in.readUTF();
-                    responses.add(new Response(folder, id));
+            } catch (BindException e) {
+                if (showBindException) {
+                    e.printStackTrace();
                 }
-                if (!query.expected().equals(responses)) {
-                    System.err.println(STR."""
-                            expected:\{query.expected()}
-                            actual:\{responses}
-                            """);
-                    throw new RuntimeException("Response doesn't match expected list");
-                }
-                out.writeInt(Request.OK);
+                return ClientStatus.BIND_EXCEPTION;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+        showStats(notFound, found);
+        return ClientStatus.SUCCESS;
+    }
+
+    private static List<Response> sendRequest(DataOutputStream out, DataInputStream in, Query query) throws IOException {
+        out.writeUTF(Request.SEARCH.toString());
+        var responseCode = in.readInt();
+        if (responseCode != Request.OK) {
+            throw new RuntimeException("Not OK for searching");
+        }
+        out.writeUTF(query.text());
+        int size = RequestBuilder.SIZE.getInt(in.readUTF());
+        List<Response> responses = new ArrayList<>(size);
+        for (int j = 0; j < size; j++) {
+            int id = in.readInt();
+            String folder = in.readUTF();
+            responses.add(new Response(folder, id));
+        }
+        out.writeInt(Request.OK);
+        return responses;
+    }
+
+    private static final int allowedNotFoundPercent = 3;
+
+    private static void showStats(List<Query> notFound, int found) {
+        double all = found + notFound.size();
+        int currentPercent = (int) ((notFound.size() / all) * 100);
+        if (currentPercent > allowedNotFoundPercent) {
+            System.out.println(STR. """
+                Search statistic:
+                Found:\t\{ found }\ttimes
+                Not found:\t\{ notFound.size() }\ttimes
+                Not found \{ currentPercent }%
+                Not found queries: \{ notFound.size() < 5 ? notFound : notFound.subList(0, 5) }
+                """ );
         }
     }
 }

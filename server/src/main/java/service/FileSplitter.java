@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static service.MasterNode.READ_WHOLE_DATASET;
+import static config.Config.READ_WHOLE_DATASET;
 
 public class FileSplitter {
 

@@ -14,14 +14,18 @@ public class TextProcessor {
 
     public String[] processText(String line) {
         var words = line.toLowerCase()
+                .replaceAll("<.*?>|<br", " ")
                 .replaceAll("(?<=[a-z])\\.|'s|'", "")//Tokenization, Normalization
                 .split("\\W+");
         return Arrays.stream(words).filter(s -> !s.isEmpty()).map(this::stemWord).toArray(String[]::new);//Stemming
     }
 
     private String stemWord(String word) {
+        if (word.length() <= SMALL_WORD_LENGTH) {
+            return word;
+        }
         for (String suffix : suffixes) {
-            if (word.length() > SMALL_WORD_LENGTH && word.length() > suffix.length() && word.endsWith(suffix)) {
+            if (word.length() > suffix.length() && word.endsWith(suffix)) {
                 return word.substring(0, word.length() - suffix.length());
             }
         }

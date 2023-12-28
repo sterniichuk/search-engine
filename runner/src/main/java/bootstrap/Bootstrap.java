@@ -13,7 +13,7 @@ public class Bootstrap {
 
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
             source, System.getProperty("user.dir"),
-            variant, "1",
+            variant, "24",
             clientNumber, "32"
     ));
 

@@ -51,7 +51,6 @@ public class Server implements AutoCloseable {
                 // Establishing a socket connection to unblock any threads waiting for new clients on the .accept() method.
             } catch (ConnectException e) {
                 alive = false;
-                System.out.println("Killed");
             } catch (Exception e) {
                 e.printStackTrace();
             }

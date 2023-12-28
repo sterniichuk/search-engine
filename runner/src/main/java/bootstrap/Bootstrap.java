@@ -8,13 +8,17 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import static config.Config.*;
+import static domain.Mode.BUILDING;
+import static domain.Mode.FULL;
 
 public class Bootstrap {
 
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
             source, System.getProperty("user.dir"),
             variant, "24",
-            clientNumber, "32"
+            clientNumber, "32",
+            queries, "50",
+            mode, BUILDING.toString()
     ));
 
     private static final int CPU_CORES = 8;
@@ -52,21 +56,23 @@ public class Bootstrap {
             Thread.sleep(100);
             serverStarted = true;
             builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber)).waitFor();//send request to build index
-            int numberOfClients = getIntValue(clientNumber, arguments);
-            System.out.println("Start clients");
-            List<Process> list = IntStream.range(0, numberOfClients)
-                    .mapToObj(i -> {
-                        try {
-                            return builder.exec(ClientRunner.class, getClientArguments());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .toList();//send search requests
-            for (Process process : list) {
-                process.waitFor();//wait for all processes
+            if(FULL.toString().equals(arguments.get(mode))){
+                int numberOfClients = getIntValue(clientNumber, arguments);
+                System.out.println("Start clients");
+                List<Process> list = IntStream.range(0, numberOfClients)
+                        .mapToObj(i -> {
+                            try {
+                                return builder.exec(ClientRunner.class, getClientArguments());
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .toList();//send search requests
+                for (Process process : list) {
+                    process.waitFor();//wait for all processes
+                }
+                System.out.println("Finish clients");
             }
-            System.out.println("Finish clients");
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -75,9 +81,10 @@ public class Bootstrap {
     }
 
     private static List<String> getClientArguments() {
-        String variantValue = validInt();
+        String variantValue = validInt(variant);
+        String queriesValue = validInt(queries);
         String folder = arguments.get(source);
-        return List.of(variant, variantValue, source, folder);
+        return List.of(variant, variantValue, source, folder, queries, queriesValue);
     }
 
     private static void stopServer(boolean serverStarted, ProcessFactory builder) {
@@ -92,12 +99,12 @@ public class Bootstrap {
     }
 
     private static List<String> getBuilderArguments(Integer threadNumber) {
-        String variantValue = validInt();
+        String variantValue = validInt(variant);
         return List.of(variant, variantValue, threads, threadNumber + "");
     }
 
-    private static String validInt() {
-        int number = getIntValue(config.Config.variant, arguments);
+    private static String validInt(String s) {
+        int number = getIntValue(s, arguments);
         return number + "";
     }
 }

@@ -22,6 +22,7 @@ public interface Config {
     String variant = "--variant";
     String threads = "--threads";
     String queries = "--queries";
+    String mode = "--mode";
 
     int READ_WHOLE_DATASET = -1;
 

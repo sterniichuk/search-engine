@@ -1,9 +1,13 @@
 package bootstrap;
 
 import domain.Statistic;
+import service.ChartService;
 import service.ProcessFactory;
 import service.StatisticService;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +21,7 @@ public class Bootstrap {
 
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
             source, System.getProperty("user.dir"),
-            variant, "24",
+            variant, "-1",
             clientNumber, "32",
             queries, "50",
             mode, BUILDING.toString()
@@ -37,15 +41,16 @@ public class Bootstrap {
             CPU_LOGICAL_CORES * 8,
             CPU_LOGICAL_CORES * 16
     );
-
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-hh-mm-ss");
 
     public static void main(String[] args) {
         System.out.println("Java version: " + System.getProperty("java.version"));
         updateArguments(args, arguments);
         var builder = new ProcessFactory();
+        String timeStamp = LocalDateTime.now().format(formatter);
         deleteOldStatistic();
         threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder));
-        presentStats();
+        presentStats(timeStamp);
     }
 
     private static void applicationRuntimeLifeCycle(Integer threadNumber, ProcessFactory builder) {
@@ -60,7 +65,7 @@ public class Bootstrap {
             Thread.sleep(100);
             serverStarted = true;
             builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber)).waitFor();//send request to build index
-            if(FULL.toString().equals(arguments.get(mode))){
+            if (FULL.toString().equals(arguments.get(mode))) {
                 int numberOfClients = getIntValue(clientNumber, arguments);
                 System.out.println("Start clients");
                 List<Process> list = IntStream.range(0, numberOfClients)
@@ -84,15 +89,22 @@ public class Bootstrap {
         }
     }
 
-    private static void presentStats() {
+    public static void presentStats(String timeStamp) {
         var statisticService = new StatisticService();
-        List<Statistic> statistics = statisticService.loadStatistic();
-        System.out.println(statistics);
+        String currentVariant = arguments.get(variant);
+        List<Statistic> statistics = statisticService.loadStatistic(currentVariant);
+        var chartService = new ChartService();
+        try {
+            String filePath = statisticService.getFilePath(timeStamp) + STR. "var\{ currentVariant }.png" ;
+            chartService.makeChart(statistics, STR. "Building inverted index. Variant:\{ currentVariant }" , filePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void deleteOldStatistic() {
         StatisticService service = new StatisticService();
-        service.clearFolder();
+        service.deleteStatisticFile(arguments.get(variant));
     }
 
     private static List<String> getClientArguments() {

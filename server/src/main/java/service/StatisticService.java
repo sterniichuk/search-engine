@@ -5,7 +5,7 @@ import domain.Statistic;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StatisticService {
@@ -14,51 +14,55 @@ public class StatisticService {
     private final String $ = File.separator;
     private final String fileName = "measurements";
 
+    public String getStatisticFileName(String variant) {
+        return STR. "\{ fileName }_var\{ variant }.csv" ;
+    }
+
+    public String getStatisticFileName(int variant) {
+        return getStatisticFileName(variant + "");
+    }
+
 
     public void storeStatistic(Statistic stats) {
         try {
             Path dir = Files.createDirectories(Path.of(folder));
-            File file = new File(dir.toAbsolutePath() + $ + fileName);
+            File file = new File(dir.toAbsolutePath() + $ + getStatisticFileName(stats.variant()));
             if (!file.exists()) {
                 Files.createFile(file.toPath());
             }
-            try (DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(file, true))) {
-                dataOutputStream.writeLong(stats.time());
-                dataOutputStream.writeInt(stats.variant());
-                dataOutputStream.writeInt(stats.threads());
+            try (var out = new BufferedWriter(new FileWriter(file, true))) {
+                out.write(STR. "\{ stats.threads() },\{ stats.time() },\{ stats.variant() }\n" );
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public List<Statistic> loadStatistic() {
-        List<Statistic> statistics = new ArrayList<>();
-        try (DataInputStream dataInputStream = new DataInputStream(new FileInputStream(folder + $ + fileName))) {
-            while (dataInputStream.available() > 0) {
-                long time = dataInputStream.readLong();
-                int variant = dataInputStream.readInt();
-                int threads = dataInputStream.readInt();
-                statistics.add(new Statistic(time, variant, threads));
-            }
+    public List<Statistic> loadStatistic(String variant) {
+        try (var in = new BufferedReader(new FileReader(folder + $ + getStatisticFileName(variant)))) {
+            return in.lines()
+                    .map(s -> s.split(","))
+                    .map(s -> Arrays.stream(s).mapToInt(Integer::parseInt).toArray())
+                    .map(s -> new Statistic(s[1], s[2], s[0]))
+                    .toList();
         } catch (IOException e) {
             throw new RuntimeException("Error loading statistics", e);
         }
-        return statistics;
     }
 
-    public void clearFolder() {
-        File dir = new File(folder);
-        File[] files = dir.listFiles();
-        if (files == null || files.length == 0) {
+    public void deleteStatisticFile(String variant) {
+        File file = new File(folder + $ + getStatisticFileName(variant));
+        if (!file.exists()) {
             return;
         }
-        for (var file : files) {
-            try {
-                Files.delete(file.toPath());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            Files.delete(file.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    public String getFilePath(String fileName) {
+        return folder + $ + fileName;
     }
 }

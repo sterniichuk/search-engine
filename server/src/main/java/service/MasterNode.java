@@ -26,7 +26,7 @@ public class MasterNode {
             index = parallelIndexBuilding(paths, variant, map, threadNumber);
         }
         var time = System.nanoTime() - start;
-        statistic.storeStatistic(new Statistic(time, variant, threadNumber));
+        statistic.storeStatistic(new Statistic((int) (time / 1000_000), variant, threadNumber));
         Map<Integer, String> numberToFolder = invertMap(map);
         return new MasterResponse(index, numberToFolder);
     }

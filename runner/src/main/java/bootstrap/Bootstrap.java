@@ -1,13 +1,14 @@
 package bootstrap;
 
+import config.Config;
 import domain.Statistic;
 import service.ChartService;
 import service.ProcessFactory;
 import service.StatisticService;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +39,10 @@ public class Bootstrap {
             CPU_CORES,
             CPU_LOGICAL_CORES,
             CPU_LOGICAL_CORES * 2,
-            CPU_LOGICAL_CORES * 4
-//            CPU_LOGICAL_CORES * 8,
-//            CPU_LOGICAL_CORES * 16
+            CPU_LOGICAL_CORES * 4,
+            CPU_LOGICAL_CORES * 8,
+            CPU_LOGICAL_CORES * 16
     );
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-hh-mm-ss");
 
     public static void main(String[] args) throws InterruptedException {
         System.out.println("Java version: " + System.getProperty("java.version"));
@@ -50,15 +50,14 @@ public class Bootstrap {
         var builder = new ProcessFactory();
         int N = getIntValue(iterations, arguments);
         for (int i = 0; i < N; i++) {
-            String timeStamp = LocalDateTime.now().format(formatter);
-            deleteOldStatistic();
-            threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder));
-            presentStats(timeStamp);
+            String currentTimeStamp = LocalDateTime.now().format(formatter);
+            threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder, currentTimeStamp));
+            presentStats(currentTimeStamp);
             Thread.sleep(500);
         }
     }
 
-    private static void applicationRuntimeLifeCycle(Integer threadNumber, ProcessFactory builder) {
+    private static void applicationRuntimeLifeCycle(Integer threadNumber, ProcessFactory builder, String timeStamp) {
         boolean serverStarted = false;
         try {
             System.out.println(STR. """
@@ -69,7 +68,7 @@ public class Bootstrap {
             builder.exec(ServerRunner.class, List.of());//run server
             Thread.sleep(100);
             serverStarted = true;
-            builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber)).waitFor();//send request to build index
+            builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber, timeStamp)).waitFor();//send request to build index
             if (FULL.toString().equals(arguments.get(mode))) {
                 int numberOfClients = getIntValue(clientNumber, arguments);
                 System.out.println("Start clients");
@@ -97,19 +96,18 @@ public class Bootstrap {
     public static void presentStats(String timeStamp) {
         var statisticService = new StatisticService();
         String currentVariant = arguments.get(variant);
-        List<Statistic> statistics = statisticService.loadStatistic(currentVariant);
+        List<Statistic> statistics = statisticService.loadStatistic(currentVariant, timeStamp);
         var chartService = new ChartService();
+        String filePath = statisticService.getFilePath(timeStamp) + STR. "var\{ currentVariant }.png" ;
         try {
-            String filePath = statisticService.getFilePath(timeStamp) + STR. "var\{ currentVariant }.png" ;
             chartService.makeChart(statistics, STR. "Building inverted index. Variant:\{ currentVariant }" , filePath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static void deleteOldStatistic() {
-        StatisticService service = new StatisticService();
-        service.deleteStatisticFile(arguments.get(variant));
+        System.out.println(STR. """
+                Check statistic in the folder:\{ statisticService.getAbsoluteFolder() }
+                Chart image:\{ new File(filePath).getAbsolutePath() }
+                """ );
     }
 
     private static List<String> getClientArguments() {
@@ -130,9 +128,9 @@ public class Bootstrap {
         }
     }
 
-    private static List<String> getBuilderArguments(Integer threadNumber) {
+    private static List<String> getBuilderArguments(Integer threadNumber, String timeStamp) {
         String variantValue = validInt(variant);
-        return List.of(variant, variantValue, threads, threadNumber + "");
+        return List.of(variant, variantValue, threads, threadNumber + "", Config.timeStamp, timeStamp);
     }
 
     private static String validInt(String s) {

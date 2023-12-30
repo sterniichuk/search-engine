@@ -13,10 +13,11 @@ public class MasterNode {
     private final StatisticService statistic = new StatisticService();
 
     /**
-     * @param paths   List of paths to files. aclImdb/*
-     * @param variant Variant in the group of the student. -1 - when reading whole dataset
+     * @param paths     List of paths to files. aclImdb/*
+     * @param variant   Variant in the group of the student. -1 - when reading whole dataset
+     * @param timeStamp Time stamp used as an identifier for statistic files. If null, statistics will not be stored.
      */
-    public MasterResponse buildIndexFromSource(List<String> paths, int variant, int threadNumber) {
+    public MasterResponse buildIndexFromSource(List<String> paths, int variant, int threadNumber, String timeStamp) {
         Map<String, Integer> map = toMap(paths);
         InvertedIndex index;
         var start = System.nanoTime();
@@ -26,9 +27,15 @@ public class MasterNode {
             index = parallelIndexBuilding(paths, variant, map, threadNumber);
         }
         var time = System.nanoTime() - start;
-        statistic.storeStatistic(new Statistic((int) (time / 1000_000), variant, threadNumber));
+        if(timeStamp != null){
+            statistic.storeStatistic(new Statistic((int) (time / 1000_000), variant, threadNumber), timeStamp);
+        }
         Map<Integer, String> numberToFolder = invertMap(map);
         return new MasterResponse(index, numberToFolder);
+    }
+
+    public MasterResponse buildIndexFromSource(List<String> paths, int variant, int threadNumber) {
+        return buildIndexFromSource(paths, variant, threadNumber, null);
     }
 
     private Map<String, Integer> toMap(List<String> paths) {

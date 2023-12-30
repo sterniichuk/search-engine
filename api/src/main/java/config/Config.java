@@ -1,5 +1,6 @@
 package config;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,9 @@ public interface Config {
     String queries = "--queries";
     String mode = "--mode";
     String iterations = "--iterations";
+    String timeStamp = "--time-stamp";
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-hh-mm-ss");
+
     int READ_WHOLE_DATASET = -1;
 
 

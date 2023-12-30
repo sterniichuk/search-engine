@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Builder {
 
-    public int buildIndex(int threadNumber, int variant, List<String> folders) {
+    public int buildIndex(int threadNumber, int variant, List<String> folders, String currentTimeStamp) {
 
         try (Socket socket = new Socket(Config.host, Config.serverPort);
              var out = new DataOutputStream(socket.getOutputStream());
@@ -28,6 +28,7 @@ public class Builder {
             for (var folder : folders) {
                 out.writeUTF(RequestBuilder.FOLDER.putValue(folder));
             }
+            out.writeUTF(RequestBuilder.TIME_STAMP.putValue(currentTimeStamp));
             responseCode = in.readInt();
             if (responseCode != Request.OK) {
                 System.out.println("Not OK for parameters");

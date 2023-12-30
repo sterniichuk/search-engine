@@ -5,6 +5,7 @@ import controller.Builder;
 import protocol.Request;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,7 +16,8 @@ public class BuilderRunner {
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
             threads, "8",
             variant, "24",
-            source, System.getProperty("user.dir")
+            source, System.getProperty("user.dir"),
+            timeStamp, LocalDateTime.now().format(formatter)
     ));
 
     public static void main(String[] args) {
@@ -26,7 +28,7 @@ public class BuilderRunner {
         checkDirectory(folder);
         var folders = Config.DEFAULT_PATHS.stream().map(s -> folder.getAbsolutePath() + s.replace("..", "")).toList();
         System.out.println(folders);
-        int code = (new Builder()).buildIndex(threadNumber, variant, folders);
+        int code = (new Builder()).buildIndex(threadNumber, variant, folders, arguments.get(timeStamp));
         if (code != Request.CREATED) {
             System.err.println("Build index response: " + code);
         }

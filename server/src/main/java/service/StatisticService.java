@@ -14,19 +14,19 @@ public class StatisticService {
     private final String $ = File.separator;
     private final String fileName = "measurements";
 
-    public String getStatisticFileName(String variant) {
-        return STR. "\{ fileName }_var\{ variant }.csv" ;
+    public String getStatisticFileName(String variant, String timeStamp) {
+        return STR. "\{ fileName }_var\{ variant }_time\{timeStamp}.csv" ;
     }
 
-    public String getStatisticFileName(int variant) {
-        return getStatisticFileName(variant + "");
+    public String getStatisticFileName(int variant, String timeStamp) {
+        return getStatisticFileName(variant + "", timeStamp);
     }
 
 
-    public void storeStatistic(Statistic stats) {
+    public void storeStatistic(Statistic stats, String timeStamp) {
         try {
             Path dir = Files.createDirectories(Path.of(folder));
-            File file = new File(dir.toAbsolutePath() + $ + getStatisticFileName(stats.variant()));
+            File file = new File(dir.toAbsolutePath() + $ + getStatisticFileName(stats.variant(), timeStamp));
             if (!file.exists()) {
                 Files.createFile(file.toPath());
             }
@@ -38,8 +38,8 @@ public class StatisticService {
         }
     }
 
-    public List<Statistic> loadStatistic(String variant) {
-        try (var in = new BufferedReader(new FileReader(folder + $ + getStatisticFileName(variant)))) {
+    public List<Statistic> loadStatistic(String variant, String timeStamp) {
+        try (var in = new BufferedReader(new FileReader(folder + $ + getStatisticFileName(variant, timeStamp)))) {
             return in.lines()
                     .map(s -> s.split(","))
                     .map(s -> Arrays.stream(s).mapToInt(Integer::parseInt).toArray())
@@ -50,19 +50,11 @@ public class StatisticService {
         }
     }
 
-    public void deleteStatisticFile(String variant) {
-        File file = new File(folder + $ + getStatisticFileName(variant));
-        if (!file.exists()) {
-            return;
-        }
-        try {
-            Files.delete(file.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public String getFilePath(String fileName) {
         return folder + $ + fileName;
+    }
+
+    public String getAbsoluteFolder() {
+        return new File(folder).getAbsolutePath();
     }
 }

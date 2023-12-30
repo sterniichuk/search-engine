@@ -10,6 +10,7 @@ import service.StatisticService;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,23 +30,9 @@ public class Bootstrap {
             queries, "50",
             mode, BUILDING.toString(),
             iterations, "1",
-            output, System.getProperty("user.dir")
+            output, System.getProperty("user.dir"),
+            threads, "1,4,8,16,32,64,128,256"//uses 'threadNumbers' field if empty
     ));
-
-    private static final int CPU_CORES = 8;
-    private static final int CPU_LOGICAL_CORES = 16;
-    private static final int MIN_THREADS = CPU_CORES / 2;
-
-    private static final List<Integer> threadNumbers = List.of(
-            1,
-            MIN_THREADS,
-            CPU_CORES,
-            CPU_LOGICAL_CORES,
-            CPU_LOGICAL_CORES * 2,
-            CPU_LOGICAL_CORES * 4,
-            CPU_LOGICAL_CORES * 8,
-            CPU_LOGICAL_CORES * 16
-    );
 
     public static void main(String[] args) throws InterruptedException {
         log.info("Java version: " + System.getProperty("java.version"));
@@ -53,6 +40,7 @@ public class Bootstrap {
         checkFolder();
         var builder = new ProcessFactory();
         int N = getIntValue(iterations, arguments);
+        var threadNumbers = Arrays.stream(arguments.get(threads).split(",")).map(Integer::parseInt).toList();
         for (int i = 0; i < N; i++) {
             log.info(STR. "Iteration #\{ (i + 1) }" );
             String currentTimeStamp = LocalDateTime.now().format(formatter);

@@ -3,6 +3,7 @@ package controller;
 import config.Config;
 import domain.Query;
 import domain.Response;
+import lombok.extern.slf4j.Slf4j;
 import protocol.Request;
 import protocol.RequestBuilder;
 import service.QueryFactory;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 public class Client {
 
     public enum ClientStatus {
@@ -42,7 +44,7 @@ public class Client {
 
         } catch (BindException e) {
             if (showBindException) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
             return ClientStatus.BIND_EXCEPTION;
         } catch (Exception e) {
@@ -75,7 +77,7 @@ public class Client {
         double all = found + notFound.size();
         int currentPercent = (int) ((notFound.size() / all) * 100);
         if (currentPercent > allowedNotFoundPercent) {
-            System.out.println(STR. """
+            log.info(STR. """
                 Search statistic:
                 Found:\t\{ found }\ttimes
                 Not found:\t\{ notFound.size() }\ttimes

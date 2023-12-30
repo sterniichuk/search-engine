@@ -2,6 +2,7 @@ package controller;
 
 import config.Config;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -10,6 +11,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.Executors;
 
+@Slf4j
 @RequiredArgsConstructor
 public class Server implements AutoCloseable {
     private final ServerSocket serverSocket;
@@ -21,7 +23,7 @@ public class Server implements AutoCloseable {
                 Socket accept = serverSocket.accept();
                 if (!isWorking) {
                     accept.close();
-                    System.out.println("Last waiting client socket died properly");
+                    log.info("Last waiting client socket died properly");
                     return;
                 }
                 clientHandlerExecutor.submit(() -> {
@@ -33,7 +35,7 @@ public class Server implements AutoCloseable {
                 });
             }
         } catch (SocketTimeoutException e) {
-            System.err.println("Timeout");
+            log.error("Timeout");
         } catch (IOException e) {
             if (isWorking) {
                 isWorking = false;
@@ -52,7 +54,7 @@ public class Server implements AutoCloseable {
             } catch (ConnectException e) {
                 alive = false;
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
 

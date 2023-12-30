@@ -2,6 +2,7 @@ package controller;
 
 import domain.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import protocol.Request;
 import protocol.RequestBuilder;
 import service.SearchService;
@@ -10,6 +11,7 @@ import java.io.*;
 import java.util.List;
 import java.util.function.Supplier;
 
+@Slf4j
 @RequiredArgsConstructor
 public class SearchController {
     private final SearchService service;
@@ -33,7 +35,7 @@ public class SearchController {
                 }
                 int read = in.readInt();
                 if (read != Request.OK) {
-                    System.err.println(STR. "Not OK for \{ query }" );
+                    log.info(STR. "Not OK for \{ query }" );
                 }
                 hasNext = in.readBoolean();
             }

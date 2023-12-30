@@ -2,6 +2,7 @@ package bootstrap;
 
 import config.Config;
 import domain.Statistic;
+import lombok.extern.slf4j.Slf4j;
 import service.ChartService;
 import service.ProcessFactory;
 import service.StatisticService;
@@ -18,6 +19,7 @@ import static config.Config.*;
 import static domain.Mode.BUILDING;
 import static domain.Mode.FULL;
 
+@Slf4j
 public class Bootstrap {
 
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
@@ -45,7 +47,7 @@ public class Bootstrap {
     );
 
     public static void main(String[] args) throws InterruptedException {
-        System.out.println("Java version: " + System.getProperty("java.version"));
+        log.info("Java version: " + System.getProperty("java.version"));
         updateArguments(args, arguments);
         var builder = new ProcessFactory();
         int N = getIntValue(iterations, arguments);
@@ -60,8 +62,8 @@ public class Bootstrap {
     private static void applicationRuntimeLifeCycle(Integer threadNumber, ProcessFactory builder, String timeStamp) {
         boolean serverStarted = false;
         try {
-            System.out.println(STR. """
-                    \n
+            log.info(STR. """
+
                     Number of threads: \{ threadNumber }
                     Used arguments: \{ arguments.toString() }
                     """ );
@@ -71,7 +73,8 @@ public class Bootstrap {
             builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber, timeStamp)).waitFor();//send request to build index
             if (FULL.toString().equals(arguments.get(mode))) {
                 int numberOfClients = getIntValue(clientNumber, arguments);
-                System.out.println("Start clients");
+                log.info("Start clients");
+                //noinspection unused
                 List<Process> list = IntStream.range(0, numberOfClients)
                         .mapToObj(i -> {
                             try {
@@ -84,7 +87,7 @@ public class Bootstrap {
                 for (Process process : list) {
                     process.waitFor();//wait for all processes
                 }
-                System.out.println("Finish clients");
+                log.info("Finish clients");
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -104,7 +107,8 @@ public class Bootstrap {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(STR. """
+        log.info(STR. """
+
                 Check statistic in the folder:\{ statisticService.getAbsoluteFolder() }
                 Chart image:\{ new File(filePath).getAbsolutePath() }
                 """ );

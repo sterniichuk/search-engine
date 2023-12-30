@@ -1,5 +1,6 @@
 package controller;
 
+import lombok.extern.slf4j.Slf4j;
 import protocol.RequestBuilder;
 import protocol.Request;
 import service.MasterNode;
@@ -10,9 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+@Slf4j
 public class BuilderController {
     public void handleBuilding(DataInputStream in, DataOutputStream out) {
-        System.out.println("Building request");
+        log.info("Building request");
         try {
             out.writeInt(Request.OK);
             int threads = RequestBuilder.THREADS.getInt(in.readUTF());
@@ -34,9 +36,9 @@ public class BuilderController {
                     var searcher = new SearchService(masterResponse.index(), masterResponse.numberToFolder());
                     return new SearchController(searcher);
                 };
-                System.out.println(STR. "Build index with parameters: threadNumber:\{ threads }; variant:\{ variant }; folders:\{ folders }" );
+                log.info(STR. "Build index with parameters: threadNumber:\{ threads }; variant:\{ variant }; folders:\{ folders }" );
                 SearchController.setInstance(supplier);
-                System.out.println("Index constructed");
+                log.info("Index constructed");
                 out.writeInt(Request.CREATED);
                 return;
             }

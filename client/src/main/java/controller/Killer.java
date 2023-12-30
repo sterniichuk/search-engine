@@ -1,11 +1,13 @@
 package controller;
 
 import config.Config;
+import lombok.extern.slf4j.Slf4j;
 import protocol.Request;
 
 import java.io.*;
 import java.net.Socket;
 
+@Slf4j
 public class Killer {
     public void askServerToFinish() {
         try (Socket socket = new Socket(Config.host, Config.serverPort);
@@ -14,10 +16,10 @@ public class Killer {
             out.writeUTF(Request.KILL.toString());
             var responseCode = in.readInt();
             if (responseCode != Request.OK) {
-                System.out.println("Not OK for kill: " + responseCode);
+                log.info("Not OK for kill: " + responseCode);
                 return;
             }
-            System.out.println("Killed");
+            log.info("Killed");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

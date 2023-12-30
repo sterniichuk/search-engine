@@ -114,7 +114,7 @@ public class Bootstrap {
     }
 
     public static void presentStats(String timeStamp) {
-        var statisticService = new StatisticService();
+        var statisticService = new StatisticService(arguments.get(output));
         String currentVariant = arguments.get(variant);
         List<Statistic> statistics = statisticService.loadStatistic(currentVariant, timeStamp);
         var chartService = new ChartService();

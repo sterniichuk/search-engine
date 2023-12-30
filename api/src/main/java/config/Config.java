@@ -18,7 +18,7 @@ public interface Config {
     int serverPort = 8088;
     String host = "localhost";
 
-    String clientNumber = "--clients";
+    String clients = "--clients";
     String source = "--source";
     String variant = "--variant";
     String threads = "--threads";

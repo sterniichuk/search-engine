@@ -26,7 +26,7 @@ public class Bootstrap {
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
             source, System.getProperty("user.dir"),
             variant, "24",
-            clientNumber, "32",
+            clients, "32",
             queries, "50",
             mode, BUILDING.toString(),
             iterations, "1",
@@ -77,7 +77,7 @@ public class Bootstrap {
             serverStarted = true;
             builder.exec(BuilderRunner.class, getBuilderArguments(threadNumber, timeStamp)).waitFor();//send request to build index
             if (FULL.toString().equals(arguments.get(mode))) {
-                int numberOfClients = getIntValue(clientNumber, arguments);
+                int numberOfClients = getIntValue(clients, arguments);
                 log.info("Start clients");
                 //noinspection unused
                 List<Process> list = IntStream.range(0, numberOfClients)
@@ -123,7 +123,9 @@ public class Bootstrap {
         String variantValue = validInt(variant);
         String queriesValue = validInt(queries);
         String folder = arguments.get(source);
-        return List.of(variant, variantValue, source, folder, queries, queriesValue);
+        return List.of(variant, variantValue,
+                source, folder,
+                queries, queriesValue);
     }
 
     private static void stopServer(boolean serverStarted, ProcessFactory builder) {

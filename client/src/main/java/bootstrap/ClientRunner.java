@@ -20,20 +20,23 @@ public class ClientRunner {
 
     public static void main(String[] args) {
         updateArguments(args, arguments);
-//        System.out.println(STR."Client arguments: \{arguments}");
         File[] files = getFiles();
         int numberOfQueries = getIntValue(queries, arguments);
         var client = new Client();
         var clientStatus = client.doQueries(numberOfQueries, files, false);
         int iterations = 5;
         for (int i = 0; i < iterations && clientStatus == Client.ClientStatus.BIND_EXCEPTION; i++) {
-            int time = (new Random()).nextInt(250) + 50;
-            try {
-                Thread.sleep(time);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
+            sleep();
             clientStatus = client.doQueries(numberOfQueries, files, i == iterations - 1);
+        }
+    }
+
+    private static void sleep() {
+        int time = (new Random()).nextInt(250) + 50;
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -41,7 +44,7 @@ public class ClientRunner {
         int variant = getIntValue(Config.variant, arguments);
         var folder = new File(arguments.get(source));
         return Config.DEFAULT_PATHS.stream()
-                .map(s -> folder.getAbsolutePath() + s.replace("..", ""))
+                .map(s -> folder.getAbsolutePath() + File.separator + s)
                 .map(File::new)
                 .map(f -> toSplit(f, variant))
                 .map(s -> {

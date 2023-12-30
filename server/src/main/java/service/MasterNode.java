@@ -76,10 +76,9 @@ public class MasterNode {
         return index[0];
     }
 
-    private List<List<Split>> getSplits(List<String> paths, int variant, int threadNumber) {
-        var splits = paths.stream().map(File::new)
+    private List<Split> getSplits(List<String> paths, int variant, int threadNumber) {
+        return paths.stream().map(File::new)
                 .flatMap((File x) -> splitter.toSplit(x, variant, threadNumber).stream()).toList();
-        return splitter.packSplits(splits, threadNumber);
     }
 
     private static void lazyInit(InvertedIndex[] index, List<Entry> reduce) {

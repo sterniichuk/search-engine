@@ -21,10 +21,11 @@ public class Bootstrap {
 
     private static final Map<String, String> arguments = new HashMap<>(Map.of(
             source, System.getProperty("user.dir"),
-            variant, "-1",
+            variant, "24",
             clientNumber, "32",
             queries, "50",
-            mode, BUILDING.toString()
+            mode, BUILDING.toString(),
+            iterations, "1"
     ));
 
     private static final int CPU_CORES = 8;
@@ -37,20 +38,24 @@ public class Bootstrap {
             CPU_CORES,
             CPU_LOGICAL_CORES,
             CPU_LOGICAL_CORES * 2,
-            CPU_LOGICAL_CORES * 4,
-            CPU_LOGICAL_CORES * 8,
-            CPU_LOGICAL_CORES * 16
+            CPU_LOGICAL_CORES * 4
+//            CPU_LOGICAL_CORES * 8,
+//            CPU_LOGICAL_CORES * 16
     );
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-hh-mm-ss");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         System.out.println("Java version: " + System.getProperty("java.version"));
         updateArguments(args, arguments);
         var builder = new ProcessFactory();
-        String timeStamp = LocalDateTime.now().format(formatter);
-        deleteOldStatistic();
-        threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder));
-        presentStats(timeStamp);
+        int N = getIntValue(iterations, arguments);
+        for (int i = 0; i < N; i++) {
+            String timeStamp = LocalDateTime.now().format(formatter);
+            deleteOldStatistic();
+            threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder));
+            presentStats(timeStamp);
+            Thread.sleep(500);
+        }
     }
 
     private static void applicationRuntimeLifeCycle(Integer threadNumber, ProcessFactory builder) {

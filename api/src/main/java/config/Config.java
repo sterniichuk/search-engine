@@ -23,7 +23,7 @@ public interface Config {
     String threads = "--threads";
     String queries = "--queries";
     String mode = "--mode";
-
+    String iterations = "--iterations";
     int READ_WHOLE_DATASET = -1;
 
 

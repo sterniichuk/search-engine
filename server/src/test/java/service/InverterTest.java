@@ -13,12 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InverterTest {
+    private final String datasetPath = System.getProperty("indexdataset");
 
     @Test
     void reduce() {
         //given
         Parser parser = new Parser(new TextProcessor());
-        String folder = "..\\datasets\\aclImdb\\test\\neg";
+        String folder = datasetPath + "\\datasets\\aclImdb\\test\\neg";
         List<TermDocIdPair> map = parser.map(List.of(new Split(0, 2, folder)),
                 Map.of(folder, 0));
         //when

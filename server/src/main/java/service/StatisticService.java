@@ -10,7 +10,7 @@ import java.util.List;
 
 public class StatisticService {
 
-    private final String folder = "../statistic";
+    private final String folder = "./statistic";
     private final String $ = File.separator;
     private final String fileName = "measurements";
 

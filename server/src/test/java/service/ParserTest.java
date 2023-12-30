@@ -10,11 +10,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ParserTest {
+    private final String datasetPath = System.getProperty("indexdataset");
 
     @Test
     void map() {
         Parser parser = new Parser(new TextProcessor());
-        String folder = "..\\datasets\\aclImdb\\test\\neg";
+        String folder = datasetPath + "\\datasets\\aclImdb\\test\\neg";
         List<TermDocIdPair> map = parser.map(List.of(new Split(0, 2, folder)),
                 Map.of(folder, 0));
         assertTrue(map.size() > 50 && map.size() < 350);

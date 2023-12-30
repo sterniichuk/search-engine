@@ -29,7 +29,7 @@ public class BuilderRunner {
         int variant = getIntValue(Config.variant, arguments);
         var folder = new File(arguments.get(source));
         checkDirectory(folder);
-        var folders = Config.DEFAULT_PATHS.stream().map(s -> folder.getAbsolutePath() + s.replace("..", "")).toList();
+        var folders = Config.DEFAULT_PATHS.stream().map(s -> folder.getAbsolutePath() + File.separator + s).toList();
         log.info(folders.toString());
         int code = (new Builder()).buildIndex(threadNumber, variant, folders, arguments.get(timeStamp));
         if (code != Request.CREATED) {

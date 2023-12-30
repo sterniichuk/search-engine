@@ -49,13 +49,29 @@ public class Bootstrap {
     public static void main(String[] args) throws InterruptedException {
         log.info("Java version: " + System.getProperty("java.version"));
         updateArguments(args, arguments);
+        checkFolder();
         var builder = new ProcessFactory();
         int N = getIntValue(iterations, arguments);
         for (int i = 0; i < N; i++) {
+            log.info(STR. "Iteration #\{ (i + 1) }" );
             String currentTimeStamp = LocalDateTime.now().format(formatter);
             threadNumbers.forEach(threadNumber -> applicationRuntimeLifeCycle(threadNumber, builder, currentTimeStamp));
             presentStats(currentTimeStamp);
             Thread.sleep(500);
+        }
+    }
+
+    private static void checkFolder() {
+        File folder = new File(arguments.get(source) + File.separator + "datasets");
+        if (!folder.exists()) {
+            throw new IllegalArgumentException(STR. "Folder doesn't exist. Path: \{ folder.getAbsolutePath() }" );
+        }
+        if (!folder.isDirectory()) {
+            throw new IllegalArgumentException(STR. "Not a folder. Path: \{ folder.getAbsolutePath() }" );
+        }
+        String[] list = folder.list();
+        if (list == null || list.length == 0) {
+            throw new IllegalArgumentException(STR. "Source folde is empty. Path: \{ folder.getAbsolutePath() }" );
         }
     }
 
@@ -134,7 +150,11 @@ public class Bootstrap {
 
     private static List<String> getBuilderArguments(Integer threadNumber, String timeStamp) {
         String variantValue = validInt(variant);
-        return List.of(variant, variantValue, threads, threadNumber + "", Config.timeStamp, timeStamp);
+        String sourceValue = arguments.get(source);
+        return List.of(source, sourceValue,
+                variant, variantValue,
+                threads, threadNumber + "",
+                Config.timeStamp, timeStamp);
     }
 
     private static String validInt(String s) {

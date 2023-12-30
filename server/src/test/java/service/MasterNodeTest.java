@@ -13,20 +13,20 @@ import java.util.*;
 
 import static config.Config.DEFAULT_PATHS;
 import static org.junit.jupiter.api.Assertions.*;
+import static service.TestUtils.toAbsolute;
 
 class MasterNodeTest {
 
     @Test
     void buildIndexFromSource() {
         MasterNode master = new MasterNode();
-        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), 1, 1).index();
+        var simpleInvertedIndex = master.buildIndexFromSource(toAbsolute(DEFAULT_PATHS.getFirst()), 1, 1).index();
         String surnamePresentInTheFirstFile = "Costner";
         surnamePresentInTheFirstFile = (new TextProcessor().processText(surnamePresentInTheFirstFile))[0]; //adjust word to token
         var postings = simpleInvertedIndex.get(surnamePresentInTheFirstFile);
         assertFalse(postings.isEmpty());
         assertTrue(postings.stream().anyMatch(p -> p.docId() == 0 && p.folder() == 0 && p.positions().getFirst() == 3));
     }
-
     @ParameterizedTest
     @ValueSource(ints = {2, 3, 2, 5, 8, 10})
     void testPutOfParallelIndex(int threadNumber) {
@@ -34,11 +34,11 @@ class MasterNodeTest {
         MasterNode master = new MasterNode();
         long start = System.currentTimeMillis();
         int variant = 24;
-        var simpleInvertedIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), variant, 1).index();
+        var simpleInvertedIndex = master.buildIndexFromSource(toAbsolute(DEFAULT_PATHS.getFirst()), variant, 1).index();
         final long singleTime = System.currentTimeMillis() - start;
         //when
         start = System.currentTimeMillis();
-        var parallelIndex = master.buildIndexFromSource(List.of(DEFAULT_PATHS.getFirst()), variant, threadNumber).index();
+        var parallelIndex = master.buildIndexFromSource(toAbsolute(DEFAULT_PATHS.getFirst()), variant, threadNumber).index();
         final long parallelTime = System.currentTimeMillis() - start;
         //then
         System.out.println(STR. """
@@ -66,9 +66,10 @@ class MasterNodeTest {
         MasterNode master = new MasterNode();
         int variant = -1;
         //when
-        var parallelIndex = master.buildIndexFromSource(DEFAULT_PATHS, variant, 32).index();
+        List<String> defaultPaths = toAbsolute(DEFAULT_PATHS);
+        var parallelIndex = master.buildIndexFromSource(defaultPaths, variant, 32).index();
         TextProcessor p = new TextProcessor();
-        var dictionary = DEFAULT_PATHS.stream()
+        var dictionary = defaultPaths.stream()
                 .map(i -> new File(i).listFiles())
                 .filter(Objects::nonNull)
                 .flatMap(Arrays::stream)
@@ -92,7 +93,7 @@ class MasterNodeTest {
         //given
         MasterNode master = new MasterNode();
         int fromIndex = Math.max(0, DEFAULT_PATHS.size() - 2);
-        List<String> dataset = DEFAULT_PATHS.subList(fromIndex, DEFAULT_PATHS.size());
+        List<String> dataset = toAbsolute(DEFAULT_PATHS.subList(fromIndex, DEFAULT_PATHS.size()));
         var expectedIndex = master.buildIndexFromSource(dataset, 1, 1).index();
         var expectedList = expectedIndex.toList();
         InvertedIndex newIndex = master.buildIndexFromSource(dataset, variant, 1).index();

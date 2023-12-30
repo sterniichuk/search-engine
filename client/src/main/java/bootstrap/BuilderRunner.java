@@ -20,6 +20,7 @@ public class BuilderRunner {
             threads, "8",
             variant, "24",
             source, System.getProperty("user.dir"),
+            output, System.getProperty("user.dir"),
             timeStamp, LocalDateTime.now().format(formatter)
     ));
 
@@ -31,7 +32,7 @@ public class BuilderRunner {
         checkDirectory(folder);
         var folders = Config.DEFAULT_PATHS.stream().map(s -> folder.getAbsolutePath() + File.separator + s).toList();
         log.info(folders.toString());
-        int code = (new Builder()).buildIndex(threadNumber, variant, folders, arguments.get(timeStamp));
+        int code = (new Builder()).buildIndex(threadNumber, variant, folders, arguments.get(timeStamp), arguments.get(output));
         if (code != Request.CREATED) {
             log.info("Build index response: " + code);
         }

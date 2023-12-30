@@ -28,7 +28,8 @@ public class Bootstrap {
             clientNumber, "32",
             queries, "50",
             mode, BUILDING.toString(),
-            iterations, "1"
+            iterations, "1",
+            output, System.getProperty("user.dir")
     ));
 
     private static final int CPU_CORES = 8;
@@ -154,7 +155,8 @@ public class Bootstrap {
         return List.of(source, sourceValue,
                 variant, variantValue,
                 threads, threadNumber + "",
-                Config.timeStamp, timeStamp);
+                Config.timeStamp, timeStamp,
+                output, arguments.get(output));
     }
 
     private static String validInt(String s) {

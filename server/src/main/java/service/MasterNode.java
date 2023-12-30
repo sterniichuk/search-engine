@@ -1,6 +1,7 @@
 package service;
 
 import domain.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.*;
@@ -8,9 +9,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class MasterNode {
     private final FileSplitter splitter = new FileSplitter();
-    private final StatisticService statistic = new StatisticService();
+    private final StatisticService statistic;
+
+    public MasterNode(String outputFolder) {
+        statistic = new StatisticService(outputFolder);
+    }
+
+    public MasterNode() {
+        statistic = new StatisticService();
+    }
 
     /**
      * @param paths     List of paths to files. aclImdb/*
@@ -27,7 +37,7 @@ public class MasterNode {
             index = parallelIndexBuilding(paths, variant, map, threadNumber);
         }
         var time = System.nanoTime() - start;
-        if(timeStamp != null){
+        if (timeStamp != null) {
             statistic.storeStatistic(new Statistic((int) (time / 1000_000), variant, threadNumber), timeStamp);
         }
         Map<Integer, String> numberToFolder = invertMap(map);
@@ -75,7 +85,7 @@ public class MasterNode {
                             lazyInit(index, reduce);
                             reduce.forEach(e -> index[0].put(e.term(), e.postings()));
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            log.info(e.toString());
                         }
                     })).toList();
         }
@@ -103,7 +113,7 @@ public class MasterNode {
             try {
                 x.get();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.info(e.toString());
             }
         });
     }

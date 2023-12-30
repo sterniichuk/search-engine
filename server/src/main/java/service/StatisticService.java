@@ -10,9 +10,17 @@ import java.util.List;
 
 public class StatisticService {
 
-    private final String folder = "./statistic";
+    private final String folder;
     private final String $ = File.separator;
     private final String fileName = "measurements";
+
+    public StatisticService(String folder) {
+        this.folder = folder + "/statistic";
+    }
+
+    public StatisticService() {
+        this( ".");
+    }
 
     public String getStatisticFileName(String variant, String timeStamp) {
         return STR. "\{ fileName }_var\{ variant }_time\{timeStamp}.csv" ;

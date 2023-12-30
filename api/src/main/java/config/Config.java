@@ -26,6 +26,7 @@ public interface Config {
     String mode = "--mode";
     String iterations = "--iterations";
     String timeStamp = "--time-stamp";
+    String output = "--output";
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-hh-mm-ss");
 
     int READ_WHOLE_DATASET = -1;

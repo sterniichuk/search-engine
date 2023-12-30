@@ -12,7 +12,7 @@ import java.util.List;
 @Slf4j
 public class Builder {
 
-    public int buildIndex(int threadNumber, int variant, List<String> folders, String currentTimeStamp) {
+    public int buildIndex(int threadNumber, int variant, List<String> folders, String currentTimeStamp, String outputVal) {
 
         try (Socket socket = new Socket(Config.host, Config.serverPort);
              var out = new DataOutputStream(socket.getOutputStream());
@@ -31,6 +31,7 @@ public class Builder {
                 out.writeUTF(RequestBuilder.FOLDER.putValue(folder));
             }
             out.writeUTF(RequestBuilder.TIME_STAMP.putValue(currentTimeStamp));
+            out.writeUTF(RequestBuilder.OUTPUT.putValue(outputVal));
             responseCode = in.readInt();
             if (responseCode != Request.OK) {
                 log.info("Not OK for parameters");

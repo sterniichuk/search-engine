@@ -3,7 +3,7 @@ package protocol;
 import static java.lang.StringTemplate.STR;
 
 public enum RequestBuilder {
-    THREADS, VARIANT, FOLDERS, FOLDER, TIME_STAMP, START,
+    THREADS, VARIANT, FOLDERS, FOLDER, TIME_STAMP, OUTPUT, START,
     SIZE;
 
     private static final char DELIMITER = ':';

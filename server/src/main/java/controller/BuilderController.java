@@ -26,12 +26,13 @@ public class BuilderController {
                 folders.add(folder);
             }
             var timeStampFromClient = RequestBuilder.TIME_STAMP.getString(in.readUTF());
+            var outputFolder = RequestBuilder.OUTPUT.getString(in.readUTF());
             boolean valid = checkParameters(threads, variant, folders);
             int responseCode = valid ? Request.OK : Request.BAD_REQUEST;
             out.writeInt(responseCode);
             if (RequestBuilder.START.equalString(in.readUTF())) {
                 Supplier<SearchController> supplier = () -> {
-                    MasterNode node = new MasterNode();
+                    MasterNode node = new MasterNode(outputFolder);
                     var masterResponse = node.buildIndexFromSource(folders, variant, threads, timeStampFromClient);
                     var searcher = new SearchService(masterResponse.index(), masterResponse.numberToFolder());
                     return new SearchController(searcher);

@@ -17,8 +17,8 @@ public class QueryFactory {
     private final Random rand;
 
     public Query fromFile(File f) {
-        try {
-            String[] words = Files.lines(f.toPath())
+        try (var lines = Files.lines(f.toPath())) {
+            String[] words = lines
                     .map(l -> l.split("\\s+"))
                     .flatMap(Arrays::stream)
                     .toArray(String[]::new);

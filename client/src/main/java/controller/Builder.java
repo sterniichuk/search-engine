@@ -13,7 +13,6 @@ import java.util.List;
 public class Builder {
 
     public int buildIndex(int threadNumber, int variant, List<String> folders, String currentTimeStamp, String outputVal) {
-
         try (Socket socket = new Socket(Config.host, Config.serverPort);
              var out = new DataOutputStream(socket.getOutputStream());
              var in = new DataInputStream(socket.getInputStream())) {

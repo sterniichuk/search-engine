@@ -62,6 +62,7 @@ public class StatisticService {
         return folder + $ + fileName;
     }
 
+    @SuppressWarnings("unused")
     public String getAbsoluteFolder() {
         return new File(folder).getAbsolutePath();
     }

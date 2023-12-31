@@ -37,7 +37,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
     }
 
     /**
-     * @link https://stackoverflow.com/questions/9249983/hashcode-giving-negative-values#:~:text=It%20is%20perfectly%20legal%20to,use%20a%20shift%20mask%20(key.
+     * @link <a href="https://stackoverflow.com/questions/9249983/hashcode-giving-negative-values#:~:text=It%20is%20perfectly%20legal%20to,use%20a%20shift%20mask%20(key.">stackoverflow.com</a>
      * @see java.util.concurrent.ConcurrentHashMap#spread(int) ConcurrentHashMap.spread()
      */
     private static int spread(int h) {
@@ -90,7 +90,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                     try {
                         resizeMonitor.wait();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     }
                 }
                 return true;
@@ -164,7 +164,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
             }
             Node node = bucket.get(i);
             synchronized (node) {
-                for (; node != null; node = node.next) {
+                for (; node != null; node = node.next) {//loop through each node in an old bucket
                     int newIndex = node.hash % newCapacity;
                     var newNode = new Node(node);
                     if (!newBucket.compareAndSet(newIndex, null, newNode)) {
@@ -200,7 +200,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
         return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
 
-    class Node {
+    static class Node {
         final int hash;
         final String key;
         volatile List<Posting> value;
@@ -212,6 +212,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
             this.value = value;
         }
 
+        @SuppressWarnings("all")
         public Node(Node src) {
             this(src.hash, src.key, src.value);
         }

@@ -13,40 +13,36 @@ import java.util.function.Supplier;
 
 @Slf4j
 public class BuilderController {
-    public void handleBuilding(DataInputStream in, DataOutputStream out) {
+    public void handleBuilding(DataInputStream in, DataOutputStream out) throws IOException {
         log.info("Building request");
-        try {
-            out.writeInt(Request.OK);
-            int threads = RequestBuilder.THREADS.getInt(in.readUTF());
-            int variant = RequestBuilder.VARIANT.getInt(in.readUTF());
-            int numberOfFolders = RequestBuilder.FOLDERS.getInt(in.readUTF());
-            List<String> folders = new ArrayList<>(numberOfFolders);
-            for (int i = 0; i < numberOfFolders; i++) {
-                var folder = RequestBuilder.FOLDER.getString(in.readUTF());
-                folders.add(folder);
-            }
-            var timeStampFromClient = RequestBuilder.TIME_STAMP.getString(in.readUTF());
-            var outputFolder = RequestBuilder.OUTPUT.getString(in.readUTF());
-            boolean valid = checkParameters(threads, variant, folders);
-            int responseCode = valid ? Request.OK : Request.BAD_REQUEST;
-            out.writeInt(responseCode);
-            if (RequestBuilder.START.equalString(in.readUTF())) {
-                Supplier<SearchController> supplier = () -> {
-                    MasterNode node = new MasterNode(outputFolder);
-                    var masterResponse = node.buildIndexFromSource(folders, variant, threads, timeStampFromClient);
-                    var searcher = new SearchService(masterResponse.index(), masterResponse.numberToFolder());
-                    return new SearchController(searcher);
-                };
-                log.info(STR. "Build index with parameters: threadNumber:\{ threads }; variant:\{ variant }; folders:\{ folders }" );
-                SearchController.setInstance(supplier);
-                log.info("Index constructed");
-                out.writeInt(Request.CREATED);
-                return;
-            }
-            out.writeInt(Request.BAD_REQUEST);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        out.writeInt(Request.OK);
+        int threads = RequestBuilder.THREADS.getInt(in.readUTF());
+        int variant = RequestBuilder.VARIANT.getInt(in.readUTF());
+        int numberOfFolders = RequestBuilder.FOLDERS.getInt(in.readUTF());
+        List<String> folders = new ArrayList<>(numberOfFolders);
+        for (int i = 0; i < numberOfFolders; i++) {
+            var folder = RequestBuilder.FOLDER.getString(in.readUTF());
+            folders.add(folder);
         }
+        var timeStampFromClient = RequestBuilder.TIME_STAMP.getString(in.readUTF());
+        var outputFolder = RequestBuilder.OUTPUT.getString(in.readUTF());
+        boolean valid = checkParameters(threads, variant, folders);
+        int responseCode = valid ? Request.OK : Request.BAD_REQUEST;
+        out.writeInt(responseCode);
+        if (RequestBuilder.START.equalString(in.readUTF())) {
+            Supplier<SearchController> supplier = () -> {
+                MasterNode node = new MasterNode(outputFolder);
+                var masterResponse = node.buildIndexFromSource(folders, variant, threads, timeStampFromClient);
+                var searcher = new SearchService(masterResponse.index(), masterResponse.numberToFolder());
+                return new SearchController(searcher);
+            };
+            log.info(STR. "Build index with parameters: threadNumber:\{ threads }; variant:\{ variant }; folders:\{ folders }" );
+            SearchController.setInstance(supplier);
+            log.info("Index constructed");
+            out.writeInt(Request.CREATED);
+            return;
+        }
+        out.writeInt(Request.BAD_REQUEST);
     }
 
     private boolean checkParameters(int threads, int variant, List<String> folders) {

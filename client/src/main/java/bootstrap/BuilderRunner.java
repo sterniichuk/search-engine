@@ -30,7 +30,9 @@ public class BuilderRunner {
         int variant = getIntValue(Config.variant, arguments);
         var folder = new File(arguments.get(source));
         checkDirectory(folder);
-        var folders = Config.DEFAULT_PATHS.stream().map(s -> folder.getAbsolutePath() + File.separator + s).toList();
+        var folders = Config.DEFAULT_PATHS.stream()
+                .map(s -> folder.getAbsolutePath() + File.separator + s)
+                .toList();
         log.info(folders.toString());
         int code = (new Builder()).buildIndex(threadNumber, variant, folders, arguments.get(timeStamp), arguments.get(output));
         if (code != Request.CREATED) {
@@ -39,7 +41,8 @@ public class BuilderRunner {
     }
 
     private static void checkDirectory(File folder) {
-        boolean isValid = folder.exists() && folder.isDirectory() && folder.list() != null && Objects.requireNonNull(folder.list()).length > 0;
+        boolean isValid = folder.exists() && folder.isDirectory()
+                && folder.list() != null && Objects.requireNonNull(folder.list()).length > 0;
         if (!isValid) {
             throw new IllegalArgumentException("Bad path: " + arguments.get(source));
         }

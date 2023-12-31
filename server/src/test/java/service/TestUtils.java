@@ -13,9 +13,9 @@ public class TestUtils {
         final String datasetPath = getPathToDataset();
         return List.of(datasetPath + File.separator + s);
     }
-    public static String indexdataset = new File(System.getProperty("indexdataset")).getAbsolutePath();
+    public static String source = new File(System.getProperty("indexdataset")).getAbsolutePath();
 
     public static String getPathToDataset() {
-        return indexdataset;
+        return source;
     }
 }

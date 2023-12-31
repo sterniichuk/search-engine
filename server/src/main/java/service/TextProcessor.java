@@ -14,7 +14,7 @@ public class TextProcessor {
 
     public String[] processText(String line) {
         var words = line.toLowerCase()
-                .replaceAll("<.*?>|<br", " ")
+                .replaceAll("<.*?>|<br", " ")//handle tags...
                 .replaceAll("(?<=[a-z])\\.|'s|'", "")//Tokenization, Normalization
                 .split("\\W+");
         return Arrays.stream(words).filter(s -> !s.isEmpty()).map(this::stemWord).toArray(String[]::new);//Stemming

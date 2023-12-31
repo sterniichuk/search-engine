@@ -24,16 +24,55 @@ public class ChartService {
 
     public void makeChart(List<Statistic> statistics, String title, String filePath) throws IOException {
         XYSeries series = new XYSeries(title);
-        for (var stat : statistics) {
-            series.add(stat.threads(), stat.time());
-        }
+        statistics.forEach(stat-> series.add(stat.threads(), stat.time()));
         int fastestIndex = findFastest(statistics);
         var fastest = statistics.get(fastestIndex);
         XYSeries fastestSeries = new XYSeries("Fastest Point");
         fastestSeries.add(fastest.threads(), fastest.time());
         XYSeriesCollection dataset = new XYSeriesCollection(series);
         dataset.addSeries(fastestSeries);
-        JFreeChart chart = ChartFactory.createXYLineChart(
+        JFreeChart chart = createChart(title, dataset);
+        XYPlot plot = chart.getXYPlot();
+        setBackground(plot);
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+        colorSeries(renderer);
+        String text = annotatePoints(statistics, plot, fastest);
+        setRange(statistics, fastest, plot, text);
+        plot.setDatasetRenderingOrder(DatasetRenderingOrder.REVERSE);
+        plot.setRenderer(renderer);
+        ChartUtilities.saveChartAsPNG(new File(filePath), chart, 800, 350);
+    }
+
+    private static String annotatePoints(List<Statistic> statistics, XYPlot plot, Statistic fastest) {
+        plot.addAnnotation(fastestPointLabel(fastest));
+        String text = STR. "(\{ statistics.getFirst().threads() },\{ statistics.getFirst().time() })" ;
+        plot.addAnnotation(firstPointLabel(statistics.getFirst(), text));
+        return text;
+    }
+
+    private static void setRange(List<Statistic> statistics, Statistic fastest, XYPlot plot, String text) {
+        double min = fastest.time();
+        double max = statistics.stream().mapToInt(Statistic::time).max().orElse(-1);
+        plot.getRangeAxis().setRange(min - min * 0.75, max + max * 0.1);
+        int maxThreads = statistics.stream().mapToInt(Statistic::threads).max().orElse(-1);
+        plot.getDomainAxis().setRange(-text.length(), maxThreads + (maxThreads * 0.1));
+    }
+
+    private static void setBackground(XYPlot plot) {
+        plot.setBackgroundPaint(Color.white);
+        plot.setDomainGridlinePaint(Color.gray);
+        plot.setRangeGridlinePaint(Color.gray);
+    }
+
+    private static void colorSeries(XYLineAndShapeRenderer renderer) {
+        renderer.setSeriesPaint(0, Color.blue);
+        renderer.setSeriesPaint(1, Color.GREEN);
+        renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+        renderer.setSeriesItemLabelsVisible(1, true);
+    }
+
+    private static JFreeChart createChart(String title, XYSeriesCollection dataset) {
+        return ChartFactory.createXYLineChart(
                 title,
                 "Threads",
                 "Time",
@@ -43,26 +82,6 @@ public class ChartService {
                 true,
                 false
         );
-        XYPlot plot = chart.getXYPlot();
-        plot.setBackgroundPaint(Color.white);
-        plot.setDomainGridlinePaint(Color.gray);
-        plot.setRangeGridlinePaint(Color.gray);
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesPaint(0, Color.blue);
-        renderer.setSeriesPaint(1, Color.GREEN);
-        renderer.setSeriesStroke(0, new BasicStroke(2.0f));
-        renderer.setSeriesItemLabelsVisible(1, true);
-        plot.addAnnotation(fastestPointLabel(fastest));
-        String text = STR. "(\{ statistics.getFirst().threads() },\{ statistics.getFirst().time() })" ;
-        plot.addAnnotation(firstPointLabel(statistics.getFirst(), text));
-        double min = fastest.time();
-        double max = statistics.stream().mapToInt(Statistic::time).max().orElse(-1);
-        plot.getRangeAxis().setRange(min - min * 0.75, max + max * 0.1);
-        int maxThreads = statistics.stream().mapToInt(Statistic::threads).max().orElse(-1);
-        plot.getDomainAxis().setRange(-text.length(), maxThreads + (maxThreads * 0.1));
-        plot.setDatasetRenderingOrder(DatasetRenderingOrder.REVERSE);
-        plot.setRenderer(renderer);
-        ChartUtilities.saveChartAsPNG(new File(filePath), chart, 800, 350);
     }
 
     private static XYTextAnnotation fastestPointLabel(Statistic fastest) {

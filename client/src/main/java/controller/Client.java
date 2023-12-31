@@ -41,7 +41,6 @@ public class Client {
                 }
                 out.writeBoolean(!(i == numberOfQueries - 1));
             }
-
         } catch (BindException e) {
             if (showBindException) {
                 log.error(e.getMessage());

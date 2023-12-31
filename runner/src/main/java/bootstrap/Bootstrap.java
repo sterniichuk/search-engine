@@ -31,7 +31,7 @@ public class Bootstrap {
             mode, BUILDING.toString(),
             iterations, "1",
             output, System.getProperty("user.dir"),
-            threads, "1,4,8,16,32,64,128,256"//uses 'threadNumbers' field if empty
+            threads, "1,4,8,16,32,64,128,256"
     ));
 
     public static void main(String[] args) throws InterruptedException {
@@ -40,7 +40,9 @@ public class Bootstrap {
         checkFolder();
         var builder = new ProcessFactory();
         int N = getIntValue(iterations, arguments);
-        var threadNumbers = Arrays.stream(arguments.get(threads).split(",")).map(Integer::parseInt).toList();
+        var threadNumbers = Arrays.stream(arguments.get(threads).split(","))
+                .map(Integer::parseInt)
+                .toList();
         for (int i = 0; i < N; i++) {
             log.info(STR. "Iteration #\{ (i + 1) }" );
             String currentTimeStamp = LocalDateTime.now().format(formatter);
@@ -79,25 +81,29 @@ public class Bootstrap {
             if (FULL.toString().equals(arguments.get(mode))) {
                 int numberOfClients = getIntValue(clients, arguments);
                 log.info("Start clients");
-                //noinspection unused
-                List<Process> list = IntStream.range(0, numberOfClients)
-                        .mapToObj(i -> {
-                            try {
-                                return builder.exec(ClientRunner.class, getClientArguments());
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .toList();//send search requests
-                for (Process process : list) {
-                    process.waitFor();//wait for all processes
-                }
+                runClients(builder, numberOfClients);
                 log.info("Finish clients");
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            stopServer(serverStarted, builder);
+            runServerKiller(serverStarted, builder);
+        }
+    }
+
+    private static void runClients(ProcessFactory builder, int numberOfClients) throws InterruptedException {
+        //noinspection unused
+        List<Process> list = IntStream.range(0, numberOfClients)
+                .mapToObj(i -> {
+                    try {
+                        return builder.exec(ClientRunner.class, getClientArguments());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .toList();//send search requests
+        for (Process process : list) {
+            process.waitFor();//wait for all processes
         }
     }
 
@@ -128,7 +134,7 @@ public class Bootstrap {
                 queries, queriesValue);
     }
 
-    private static void stopServer(boolean serverStarted, ProcessFactory builder) {
+    private static void runServerKiller(boolean serverStarted, ProcessFactory builder) {
         if (serverStarted) {
             try {
                 var killer = builder.exec(KillerRunner.class, List.of());

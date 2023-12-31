@@ -29,7 +29,7 @@ public class Bootstrap {
             clients, "32",
             queries, "50",
             mode, BUILDING.toString(),
-            iterations, "3",
+            iterations, "1",
             output, System.getProperty("user.dir"),
             threads, "1,4,8,16,32,64"
     ));

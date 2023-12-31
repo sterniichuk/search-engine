@@ -129,7 +129,7 @@ java -jar --enable-preview .\runner\target\runner-1.0-SNAPSHOT.jar --source C:\U
 </tr>
 <tr>
     <td>--threads</td>
-    <td>1,4,8,16,32,64,128,256</td>
+    <td>1,4,8,16,32,64</td>
     <td>Comma-separated list of threads the program will run for each iteration</td>
 </tr>
 </table>

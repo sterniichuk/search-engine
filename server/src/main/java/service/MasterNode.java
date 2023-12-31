@@ -63,7 +63,7 @@ public class MasterNode {
         Parser parser = new Parser(new TextProcessor());
         List<TermDocIdPair> pairs = parser.map(splits, map);
         Inverter inverter = new Inverter();
-        List<Entry> entries = inverter.reduce(List.of(new Segment(pairs)));
+        List<Entry> entries = inverter.reduce(pairs);
         InvertedIndex index = new SingleThreadInvertedIndex(entries.size());
         entries.forEach(x -> index.put(x.term(), x.postings()));
         return index;
@@ -81,7 +81,7 @@ public class MasterNode {
                     .map(portionOfWork -> executor.submit(() -> {
                         try {
                             var pairs = parser.map(portionOfWork, map);
-                            var reduce = inverter.reduce(List.of(new Segment(pairs)));
+                            var reduce = inverter.reduce(pairs);
                             lazyInit(index, reduce);
                             reduce.forEach(e -> index[0].put(e.term(), e.postings()));
                         } catch (Exception e) {
@@ -98,6 +98,7 @@ public class MasterNode {
                 .flatMap((File x) -> splitter.toSplit(x, variant, threadNumber).stream()).toList();
     }
 
+    @SuppressWarnings("all")
     private static void lazyInit(InvertedIndex[] index, List<Entry> reduce) {
         if (index[0] == null) {
             synchronized (index) {

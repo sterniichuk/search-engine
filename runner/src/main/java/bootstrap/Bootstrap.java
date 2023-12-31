@@ -29,9 +29,9 @@ public class Bootstrap {
             clients, "32",
             queries, "50",
             mode, BUILDING.toString(),
-            iterations, "1",
+            iterations, "3",
             output, System.getProperty("user.dir"),
-            threads, "1,4,8,16,32,64,128,256"
+            threads, "1,4,8,16,32,64"
     ));
 
     public static void main(String[] args) throws InterruptedException {

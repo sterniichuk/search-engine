@@ -14,14 +14,13 @@ public class Inverter {
     /**
      * Groups all documents by word
      *
-     * @param segments part of the (term, docID) pairs
+     * @param pairs (term, docID) pairs
      * @return entries (term, [posting1, posting2, posting3...]), where term is a word that occurs in specific files with docID.
      * Posting contains docID.
      * @see Posting
      */
-    public List<Entry> reduce(List<Segment> segments) {
-        Map<String, List<DocId>> postingsByTerm = segments.stream()
-                .flatMap(segment -> segment.pairs().stream())
+    public List<Entry> reduce(List<TermDocIdPair> pairs) {
+        Map<String, List<DocId>> postingsByTerm = pairs.stream()
                 .collect(Collectors.groupingBy(TermDocIdPair::term,
                         Collectors.mapping(TermDocIdPair::docId, Collectors.toList())));
         return postingsByTerm.entrySet().stream()

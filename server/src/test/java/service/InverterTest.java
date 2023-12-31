@@ -1,7 +1,6 @@
 package service;
 
 import domain.Entry;
-import domain.Segment;
 import domain.Split;
 import domain.TermDocIdPair;
 import org.junit.jupiter.api.Test;
@@ -24,9 +23,10 @@ class InverterTest {
                 Map.of(folder, 0));
         //when
         Inverter inverter = new Inverter();
-        List<Entry> reduce = inverter.reduce(List.of(new Segment(map)));
+        List<Entry> reduce = inverter.reduce(map);
         //then
         assertTrue(reduce.size() < map.size());
+        @SuppressWarnings("all")
         long count = reduce.stream()
                 .flatMap(x -> x.postings().stream())
                 .flatMap(x -> x.positions().stream())

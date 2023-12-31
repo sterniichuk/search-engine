@@ -19,7 +19,7 @@ class InverterTest {
     void reduce() {
         //given
         Parser parser = new Parser(new TextProcessor());
-        String folder = datasetPath + "\\datasets\\aclImdb\\test\\neg";
+        String folder = datasetPath + "\\test\\neg";
         List<TermDocIdPair> map = parser.map(List.of(new Split(0, 2, folder)),
                 Map.of(folder, 0));
         //when

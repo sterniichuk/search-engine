@@ -22,7 +22,7 @@ class SearchServiceTest {
         var response = master.buildIndexFromSource(toAbsolute(DEFAULT_PATHS.getFirst()), 1, 8);
         SearchService s = new SearchService(response.index(), response.numberToFolder(), 1);
         var phraseFromFiles = "'Officer and a Gentleman.'";//from datasets/aclImdb/test/neg/1_3.txt,2_3.txt, 3_4.txt
-        List<Response> expectedResponse = Stream.of(1, 2, 3).map(i -> new Response(getPathToDataset() + "\\datasets\\aclImdb\\test\\neg", i)).toList();
+        List<Response> expectedResponse = Stream.of(1, 2, 3).map(i -> new Response(getPathToDataset() + "\\test\\neg", i)).toList();
         //when
         List<Response> searchResult = s.search(phraseFromFiles);
         //then
@@ -42,7 +42,7 @@ class SearchServiceTest {
         MasterNode master = new MasterNode();
         var response = master.buildIndexFromSource(toAbsolute(DEFAULT_PATHS.getFirst()), 1, 8);
         SearchService s = new SearchService(response.index(), response.numberToFolder(), 1);
-        List<Response> expectedResponse = List.of(new Response(getPathToDataset() + "\\datasets\\aclImdb\\test\\neg", id));
+        List<Response> expectedResponse = List.of(new Response(getPathToDataset() + "\\test\\neg", id));
         //when
         List<Response> searchResult = s.search(phraseFromFiles);
         //then

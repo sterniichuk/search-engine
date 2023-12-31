@@ -12,7 +12,24 @@
 - Slf4j, Logback
 - Maven
 
+## Installation Requirements
+
+This project requires the following dependencies to be installed on your machine:
+
+1. **Java 21**
+    - Download and install Java 21 from [Oracle's website](https://www.oracle.com/cis/java/technologies/downloads/#jdk21-linux).
+
+2. **Apache Maven 3.9.4+**
+    - Install Apache Maven version 3.9.4 or higher. Instructions can be found on the [official Apache Maven installation guide](https://maven.apache.org/install.html).
+
+## Dataset
+The project utilizes the [Large Movie Review Dataset](https://ai.stanford.edu/~amaas/data/sentiment/) from Stanford University. You can download the dataset from the provided link.
+
 ## Install
+
+- You need to install [Java 21](https://www.oracle.com/cis/java/technologies/downloads/#jdk21-linux) on your machine
+- Also, you need to have [Apache Maven 3.9.4+](https://maven.apache.org/install.html)
+- [Large Movie Review Dataset](https://ai.stanford.edu/~amaas/data/sentiment/)
 
 1. Clone the repository::
 
@@ -28,30 +45,29 @@
 
 3. Build the project:
 
+- Provide the absolute path to the 'aclImdb_v1' folder.
+<br>The app will automatically handle dataset splitting based on the variant passed as an argument.
+- This command will also run tests where the dataset is required.
 <pre>
-# Provide the absolute path to the 'datasets' folder.
-# The app will automatically handle dataset splitting based on the variant passed as an argument.
-# This command will also run tests where the dataset is required.
 <code>
-mvn package -Dindexdataset="C:\Users\stern\Documents\cw_sources"
+mvn package -Dindexdataset=C:\Users\stern\Documents\aclImdb_v1
 </code>
 </pre>
-<b>OR</b>
+<b>OR</b><br>
 3. Run this command to get the JAR file without testing:
 <pre>
 <code>
-## Skip tests
 mvn package -DskipTests
 </code>
 </pre>
 
 ## Run
 
-- Specify the path to a directory containing the 'datasets' folder. <br> The app will automatically split the dataset based on the variant you provide as an argument.
+- Provide the absolute path to the 'aclImdb_v1' folder. <br> The app will automatically split the dataset based on the variant you provide as an argument.
 - Also, provide a path to a folder where you want to store statistics like .csv files and charts.
 <pre>
 <code>
-java -jar --enable-preview .\runner\target\runner-1.0-SNAPSHOT.jar --source C:\Users\stern\Documents\cw_sources --output C:\Users\stern\Desktop\your-best-output-folder
+java -jar --enable-preview .\runner\target\runner-1.0-SNAPSHOT.jar --source C:\Users\stern\Documents\aclImdb_v1 --output C:\Users\stern\Desktop\your-best-output-folder
 </code>
 </pre>
 
@@ -64,7 +80,7 @@ java -jar --enable-preview .\runner\target\runner-1.0-SNAPSHOT.jar --source C:\U
 <tr>
     <td>--source</td>
     <td>System.getProperty("user.dir")</td>
-    <td>Directory where the 'datasets' folder is located</td>
+    <td>Path to <b>aclImdb_v1</b> folder. C:\some-path\aclImdb_v1</td>
 </tr>
 <tr>
     <td>--variant</td>

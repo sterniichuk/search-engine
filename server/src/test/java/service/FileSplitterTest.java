@@ -15,7 +15,7 @@ class FileSplitterTest {
     @ParameterizedTest
     @ValueSource(ints = {3, 2, 5, 10})
     void toSplit(int threadNumber) {
-        File folder = new File(datasetPath + "\\datasets\\aclImdb\\test\\neg");
+        File folder = new File(datasetPath + "\\test\\neg");
         assert folder.exists();
         FileSplitter s = new FileSplitter();
         List<Split> split = s.toSplit(folder, 1, threadNumber);
@@ -28,7 +28,7 @@ class FileSplitterTest {
     @ParameterizedTest
     @ValueSource(ints = {3, 2, 5, 10})
     void parallelSplit(int threadNumber) {
-        File folder = new File(datasetPath + "\\datasets\\aclImdb\\test\\neg");
+        File folder = new File(datasetPath + "\\test\\neg");
         assert folder.exists();
         FileSplitter s = new FileSplitter();
         List<Split> split = s.toSplit(folder, 1, threadNumber);

@@ -51,7 +51,7 @@ public class Bootstrap {
     }
 
     private static void checkFolder() {
-        File folder = new File(arguments.get(source) + File.separator + "datasets");
+        File folder = new File(arguments.get(source) + File.separator + "train");
         if (!folder.exists()) {
             throw new IllegalArgumentException(STR. "Folder doesn't exist. Path: \{ folder.getAbsolutePath() }" );
         }

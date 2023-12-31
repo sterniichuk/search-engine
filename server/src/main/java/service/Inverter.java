@@ -24,6 +24,7 @@ public class Inverter {
                 .collect(Collectors.groupingBy(TermDocIdPair::term,
                         Collectors.mapping(TermDocIdPair::docId, Collectors.toList())));
         return postingsByTerm.entrySet().stream()
+                .parallel()
                 .map(entry -> new Entry(entry.getKey(), reduceToPosting(entry.getValue())))
                 .toList();
     }

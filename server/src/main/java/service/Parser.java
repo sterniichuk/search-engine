@@ -63,13 +63,15 @@ public class Parser {
     private List<TermDocIdPair> parseWords(File f, int fileId, byte folderId) {
         var list = new ArrayList<TermDocIdPair>(Math.max(1, (int) (f.length() / AVERAGE_WORD_LENGTH)));
         try (var br = new BufferedReader(new FileReader(f))) {
+            int offset = 0;
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 var words = processor.processText(line);
                 for (int i = 0; i < words.length; i++) {
                     String word = words[i];
-                    var keyValue = new TermDocIdPair(word, new DocId(folderId, fileId, (short) i));
+                    var keyValue = new TermDocIdPair(word, new DocId(folderId, fileId, (short) (offset + i)));
                     list.add(keyValue);
                 }
+                offset += words.length;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

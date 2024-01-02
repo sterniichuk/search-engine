@@ -11,7 +11,7 @@ import java.util.Queue;
 public class ThreadPool implements AutoCloseable {
     private final Queue<Runnable> queue;
     private boolean isTerminated;
-    private boolean initiatedTermination;
+    private boolean initiatedTermination;//true when invoked .close()
     private final List<Thread> workers;
 
     public ThreadPool(int numberOfWorkers) {
@@ -28,7 +28,7 @@ public class ThreadPool implements AutoCloseable {
     }
 
     public synchronized void submit(Runnable runnable) {
-        if (!isTerminated) {
+        if (!initiatedTermination) {
             queue.add(runnable);
             if (queue.size() == 1) {
                 this.notifyAll();//notify workers that they have some job to do
@@ -50,7 +50,7 @@ public class ThreadPool implements AutoCloseable {
     }
 
     private synchronized Runnable getTask() throws InterruptedException {
-        while (!isTerminated && !initiatedTermination && queue.isEmpty()) {
+        while (!initiatedTermination && queue.isEmpty()) {
             this.wait();
         }
         Runnable poll = queue.poll();

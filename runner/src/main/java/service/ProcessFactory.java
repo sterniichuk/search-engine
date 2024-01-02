@@ -17,7 +17,7 @@ public class ProcessFactory {
         List<String> command = new LinkedList<>();
         command.add(javaBin);
         command.add("--enable-preview");
-        command.add("-cp");
+        command.add("-cp");//means classpath
         command.add(classpath);
         command.add(className);
         if (args != null) {

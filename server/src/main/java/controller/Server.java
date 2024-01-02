@@ -3,13 +3,13 @@ package controller;
 import config.Config;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import service.ThreadPool;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.Executors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -18,7 +18,7 @@ public class Server implements AutoCloseable {
     private volatile boolean isWorking = true;
 
     public void work() {
-        try (var clientHandlerExecutor = Executors.newFixedThreadPool(8)) {
+        try (var clientHandlerExecutor = ThreadPool.newFixedThreadPool(8)) {
             while (isWorking) {
                 Socket accept = serverSocket.accept();
                 if (!isWorking) {

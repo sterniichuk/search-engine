@@ -4,8 +4,10 @@ import domain.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.*;
-import java.util.concurrent.Executors;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -75,10 +77,8 @@ public class MasterNode {
         final InvertedIndex[] index = new InvertedIndex[]{null};
         Parser parser = new Parser(new TextProcessor());
         Inverter inverter = new Inverter();
-        List<? extends Future<?>> futures;
-        try (var executor = Executors.newFixedThreadPool(threadNumber)) {
-            futures = splits.stream()
-                    .map(portionOfWork -> executor.submit(() -> {
+        try (var executor = ThreadPool.newFixedThreadPool(threadNumber)) {
+            splits.forEach(portionOfWork -> executor.submit(() -> {
                         try {
                             var pairs = parser.map(portionOfWork, map);
                             var reduce = inverter.reduce(pairs);
@@ -87,9 +87,8 @@ public class MasterNode {
                         } catch (Exception e) {
                             log.info(e.toString());
                         }
-                    })).toList();
+                    }));
         }
-        join(futures);
         return index[0];
     }
 
@@ -107,16 +106,6 @@ public class MasterNode {
                 }
             }
         }
-    }
-
-    private static void join(List<? extends Future<?>> futures) {
-        futures.forEach(x -> {
-            try {
-                x.get();
-            } catch (Exception e) {
-                log.info(e.toString());
-            }
-        });
     }
 
     private Map<Integer, String> invertMap(Map<String, Integer> map) {

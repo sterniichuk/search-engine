@@ -129,7 +129,7 @@ public class ConcurrentInvertedIndex implements InvertedIndex {
                 continue;
             }
             synchronized (existingNode) {
-                if (existingNode == table.get(index) && table == this.bucket) {
+                if (existingNode == table.get(index)) {
                     for (var node = existingNode; ; ) {
                         if (node.key.equals(key)) {
                             node.value = updater.mergeSortedLists(node.value, value);

@@ -54,7 +54,8 @@ public class ThreadPool implements AutoCloseable {
             this.wait();
         }
         Runnable poll = queue.poll();
-        if (queue.isEmpty() && initiatedTermination) {
+        if (!isTerminated //if this flag is set to true there is no need to notify shutdown thread again
+                && queue.isEmpty() && initiatedTermination) {
             this.notifyAll();//notify shutdown thread
         }
         return poll;

@@ -4,7 +4,7 @@
 
 - Java 21 <img src="https://cdn.jsdelivr.net/npm/programming-languages-logos/src/java/java.png" style="height: 1rem">
 - AtomicReferenceArray
-- ExecutorService
+- Thread pool
 - StringTemplate ➕
 - Junit5
 - Lombok 🏝️

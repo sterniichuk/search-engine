@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,13 +60,22 @@ public class MasterNode {
     private InvertedIndex singleThreadIndexBuilding(List<String> paths,
                                                     int variant,
                                                     Map<String, Integer> map) {
+        var start = System.currentTimeMillis();
         List<Split> splits = paths.stream().map(File::new).map((File x) -> splitter.toSplit(x, variant)).toList();
+        System.out.println();
+        log.info(STR."SPLIT GENERATION TIME: \{System.currentTimeMillis() - start}");
         Parser parser = new Parser(new TextProcessor());
+        start = System.currentTimeMillis();
         List<TermDocIdPair> pairs = parser.map(splits, map);
+        log.info(STR."PARSER TIME: \{System.currentTimeMillis() - start}");
+        start = System.currentTimeMillis();
         Inverter inverter = new Inverter();
         List<Entry> entries = inverter.reduce(pairs);
+        log.info(STR."INVERTER TIME: \{System.currentTimeMillis() - start}");
+        start = System.currentTimeMillis();
         InvertedIndex index = new SingleThreadInvertedIndex(entries.size());
         entries.forEach(x -> index.put(x.term(), x.postings()));
+        log.info(STR."HASHMAP TIME: \{System.currentTimeMillis() - start}\n");
         return index;
     }
 

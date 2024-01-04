@@ -1,7 +1,10 @@
 package service;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Arrays;
 
+@Slf4j
 public class TextProcessor {
     /**
      * List of common suffixes
@@ -14,7 +17,7 @@ public class TextProcessor {
 
     public String[] processText(String line) {
         var words = line.toLowerCase()
-                .replaceAll("<.*?>|<br", " ")//handle tags...
+                .replaceAll("<br />|<br|<br>|<br/>", " ")//handle tags...
                 .replaceAll("(?<=[a-z])\\.|'s|'", "")//Tokenization, Normalization
                 .split("\\W+");
         return Arrays.stream(words).filter(s -> !s.isEmpty()).map(this::stemWord).toArray(String[]::new);//Stemming

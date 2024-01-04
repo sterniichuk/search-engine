@@ -70,12 +70,10 @@ public class Client {
         return responses;
     }
 
-    private static final int allowedNotFoundPercent = 3;
-
     private static void showStats(List<Query> notFound, int found) {
         double all = found + notFound.size();
         int currentPercent = (int) ((notFound.size() / all) * 100);
-        if (currentPercent > allowedNotFoundPercent) {
+        if (!notFound.isEmpty()) {
             log.info(STR. """
                 Search statistic:
                 Found:\t\{ found }\ttimes

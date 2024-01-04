@@ -12,12 +12,8 @@ import java.util.stream.IntStream;
 public class SearchService {
     private final InvertedIndex index;
     private final Map<Integer, String> folderMapper;
-    private final int k;//two terms appear within k words of each other
     private final TextProcessor processor = new TextProcessor();
 
-    public SearchService(InvertedIndex index, Map<Integer, String> folderMapper) {
-        this(index, folderMapper, 1);
-    }
 
     public List<Response> search(String string) {
         String[] tokens = processor.processText(string);
@@ -26,10 +22,10 @@ public class SearchService {
             return List.of();
         }
         var l = minimizeSearchResult(tokens, postings);
-        l = minimizeSearchResult(l);
         return l.stream()
                 .flatMap(Collection::stream)
                 .distinct()
+                .filter(p -> l.stream().filter(list -> !list.isEmpty()).allMatch(s -> s.contains(p)))
                 .map(p -> new Response(folderMapper.get((int) p.folder()), p.docId()))
                 .toList();
     }
@@ -50,58 +46,8 @@ public class SearchService {
         var shortestList = postings.get(tokens[shortest]);
         return IntStream.range(0, tokens.length)
                 .filter(i -> i != shortest)
-                .mapToObj(i -> positionalIntersect(postings.get(tokens[i]), shortestList, k + Math.abs(i - shortest)))
+                .mapToObj(i -> positionalIntersect(postings.get(tokens[i]), shortestList, Math.abs(i - shortest)))
                 .toList();
-    }
-
-    /**
-     * Further minimizes the search result after the initial minimization.
-     * <p>
-     * This method continues to refine the collection of posting lists by iteratively intersecting them
-     * until no further reduction can be achieved or until a convergence condition is met.
-     *
-     * @param l A collection of posting lists obtained after the initial minimization.
-     *          Each list contains postings associated with specific search tokens.
-     * @return Final minimized list of postings after iterative intersections.
-     */
-    private List<List<Posting>> minimizeSearchResult(List<List<Posting>> l) {
-        int prevSize = Integer.MAX_VALUE;
-        int prevShortestSize = Integer.MAX_VALUE;
-        while (prevSize > l.size() && l.size() > 1) {
-            int shortest = findShortestList(l);
-            if (l.get(shortest).size() > prevShortestSize) {
-                break;
-            }
-            prevShortestSize = l.get(shortest).size();
-            var newIntersection = intersectWithShortest(l, shortest);
-            if (newIntersection.size() < l.size()) {
-                prevSize = l.size();
-                l = newIntersection;
-                continue;
-            }
-            break;
-        }
-        return l;
-    }
-
-    private List<List<Posting>> intersectWithShortest(List<List<Posting>> l, int shortest) {
-        return IntStream.range(0, l.size())
-                .filter(i -> i != shortest)
-                .mapToObj(i -> positionalIntersect(l.get(i), l.get(shortest), k + Math.abs(i - shortest)))
-                .toList();
-    }
-
-    private int findShortestList(List<List<Posting>> l) {
-        int min = l.getFirst().size();
-        int index = 0;
-        for (int i = 1; i < l.size(); i++) {
-            int size = l.get(i).size();
-            if (size < min && size != 0) {
-                min = size;
-                index = i;
-            }
-        }
-        return index;
     }
 
     private int findShortestList(String[] tokens, Map<String, List<Posting>> postings) {
@@ -124,6 +70,7 @@ public class SearchService {
     }
 
     /**
+     * @param k two terms appear within k words of each other
      * @link <a href="https://www.youtube.com/watch?v=QVVvx_Csd2I&list=PLaZQkZp6WhWwoDuD6pQCmgVyDbUWl_ZUi&t=406s">7 6 Phrase Queries and Positional Indexes 19 45</a>
      * @link <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">Introduction to Information Retrieval. Cambridge University Press Cambridge, England. Page 42(or 79 in pdf)</a>
      */
@@ -153,7 +100,11 @@ public class SearchService {
                     while (!l.isEmpty() && Math.abs(l.getFirst() - pp1.t) > k) {
                         l.removeFirst();
                     }
-                    l.forEach(ps -> answer.add(new Posting(p1.t.folder(), p1.t.docId(), List.of(pp1.t, ps))));
+                    l.forEach(ps -> {
+                        if (!Objects.equals(pp1.t, ps)) {
+                            answer.add(new Posting(p1.t.folder(), p1.t.docId(), List.of(pp1.t, ps)));
+                        }
+                    });
                     pp1.next();
                 }
                 p1.next();
